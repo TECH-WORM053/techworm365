@@ -270,7 +270,7 @@ class MirrorBoundaryLab {
       this.state.actualFacingMode = track?.getSettings?.().facingMode || this.state.facingMode;
       this.dom.cameraVideo.classList.toggle("is-user-facing", this.state.actualFacingMode === "user");
       this.updateFacingLabel();
-      await this.updateCameraSwitchAvailability();
+      this.dom.cameraSwitch.disabled = false;
       this.dom.captureButton.disabled = false;
       this.setCameraState(
         this.state.actualFacingMode === "environment" ? "REAR CAMERA / LIVE" : "FRONT CAMERA / LIVE",
@@ -309,16 +309,6 @@ class MirrorBoundaryLab {
     const isRear = this.state.actualFacingMode === "environment";
     this.dom.cameraFacingLabel.textContent = isRear ? "후면" : "전면";
     this.dom.cameraSwitch.setAttribute("aria-label", `${isRear ? "후면" : "전면"} 카메라에서 ${isRear ? "전면" : "후면"} 카메라로 전환`);
-  }
-
-  async updateCameraSwitchAvailability() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoInputs = devices.filter((device) => device.kind === "videoinput");
-      this.dom.cameraSwitch.disabled = videoInputs.length < 2;
-    } catch {
-      this.dom.cameraSwitch.disabled = false;
-    }
   }
 
   switchCamera() {
