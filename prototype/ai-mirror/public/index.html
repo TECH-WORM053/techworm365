@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI MIRROR — prototype v0.1</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 1. 동의 화면 -->
+  <section id="consent" class="screen active">
+    <div class="consent-box">
+      <p class="brand">AI MIRROR</p>
+      <p class="version">prototype v0.1</p>
+
+      <p class="consent-lead">이 거울은 당신을 판매하지 않습니다.<br />해석할 뿐입니다.</p>
+
+      <ul class="consent-terms">
+        <li>시작하면 카메라가 켜지고, 버튼을 누르면 사진 한 장을 찍습니다.</li>
+        <li>사진은 해석을 위해 AI(Claude)에 한 번 전달된 뒤 <strong>즉시 폐기</strong>됩니다.</li>
+        <li>이 컴퓨터를 포함해 어디에도 사진을 저장하지 않습니다.</li>
+      </ul>
+
+      <button id="btn-start" class="btn-primary">동의하고 시작</button>
+      <p id="camera-error" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- 2. 거울 화면 -->
+  <section id="mirror" class="screen">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="tint" class="tint"></div>
+
+    <div class="hud">
+      <p class="brand small">AI MIRROR</p>
+      <p id="mode-badge" class="mode-badge hidden"></p>
+    </div>
+
+    <!-- 카운트다운 -->
+    <div id="countdown" class="countdown hidden"></div>
+
+    <!-- 해석 중 -->
+    <div id="reading" class="reading hidden">
+      <span class="pulse"></span>
+      <p>읽는 중</p>
+    </div>
+
+    <!-- 해석 결과 -->
+    <div id="result" class="result hidden">
+      <p id="result-mood" class="result-mood"></p>
+      <p id="result-sentence" class="result-sentence"></p>
+      <p id="result-anchor" class="result-anchor"></p>
+      <p id="result-meta" class="result-meta"></p>
+    </div>
+
+    <!-- 오류 -->
+    <p id="mirror-error" class="mirror-error hidden"></p>
+
+    <div class="controls">
+      <button id="btn-read" class="btn-shutter" aria-label="읽기">
+        <span class="btn-shutter-label">읽기</span>
+      </button>
+      <button id="btn-again" class="btn-secondary hidden">다시 읽기</button>
+    </div>
+  </section>
+
+  <canvas id="capture-canvas" class="hidden"></canvas>
+  <script src="app.js"></script>
+</body>
+</html>
