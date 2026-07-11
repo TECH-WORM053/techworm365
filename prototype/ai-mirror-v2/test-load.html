@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:;" />
+  <title>load test</title>
+</head>
+<body>
+  <!-- 진단용 페이지: 모델 로딩이 어느 단계에서 막히는지 확인 -->
+  <pre id="log">START</pre>
+  <script>
+    const log = (m) => { document.getElementById("log").textContent += "\n" + m; };
+    window.addEventListener("error", (e) => log("ERROR: " + e.message + " @ " + (e.filename || "?")));
+    window.addEventListener("unhandledrejection", (e) => log("REJECT: " + ((e.reason && e.reason.message) || e.reason)));
+    document.addEventListener("securitypolicyviolation", (e) => log("CSP: " + e.violatedDirective + " blocked " + e.blockedURI));
+  </script>
+  <script type="module">
+    const log = (m) => { document.getElementById("log").textContent += "\n" + m; };
+    try {
+      log("1 importing bundle...");
+      const mod = await import("./vendor/mediapipe/vision_bundle.mjs");
+      log("2 import ok");
+      const fs = await mod.FilesetResolver.forVisionTasks("./vendor/mediapipe/wasm");
+      log("3 fileset ok");
+      const lm = await mod.FaceLandmarker.createFromOptions(fs, {
+        baseOptions: {
+          modelAssetPath: "./vendor/mediapipe/face_landmarker.task",
+          delegate: "GPU",
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1,
+      });
+      log("4 landmarker ok — ALL PASS");
+    } catch (e) {
+      log("CATCH: " + (e && e.message ? e.message : e));
+    }
+  </script>
+</body>
+</html>

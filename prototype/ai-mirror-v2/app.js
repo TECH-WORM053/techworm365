@@ -10,7 +10,7 @@
 import {
   FaceLandmarker,
   FilesetResolver,
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+} from "./vendor/mediapipe/vision_bundle.mjs";
 
 import { localAnalyzer } from "./analyzer.js";
 import { recommend, pickPhrase, MOOD_PALETTES } from "./catalog.js";
@@ -20,6 +20,10 @@ const ANALYZE_INTERVAL_MS = 3000;
 const FACE_LOST_MS = 1500;
 
 const $ = (id) => document.getElementById(id);
+
+// ?debug — 로딩 단계를 서버 로그로 보냄 (문제 추적용, 평소엔 아무 동작 안 함)
+const DEBUG = new URLSearchParams(location.search).has("debug");
+const probe = (step) => { if (DEBUG) fetch(`/probe/${step}`).catch(() => {}); };
 const video = $("video");
 const fxCanvas = $("fx");
 
@@ -66,19 +70,31 @@ function stopCamera() {
 // ---------- MediaPipe ----------
 
 async function loadLandmarker() {
-  const fileset = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
-  );
-  state.landmarker = await FaceLandmarker.createFromOptions(fileset, {
+  const fileset = await FilesetResolver.forVisionTasks("./vendor/mediapipe/wasm");
+  const options = (delegate) => ({
     baseOptions: {
-      modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-      delegate: "GPU",
+      modelAssetPath: "./vendor/mediapipe/face_landmarker.task",
+      delegate,
     },
     outputFaceBlendshapes: true,
     runningMode: "VIDEO",
     numFaces: 1,
   });
+
+  // GPU 초기화가 기기에 따라 실패하거나 끝나지 않는 경우가 있어
+  // 10초 안에 안 되면 CPU로 자동 전환
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("gpu-timeout")), 10000)
+  );
+  try {
+    state.landmarker = await Promise.race([
+      FaceLandmarker.createFromOptions(fileset, options("GPU")),
+      timeout,
+    ]);
+  } catch {
+    setStatus("호환 모드로 다시 준비하는 중…");
+    state.landmarker = await FaceLandmarker.createFromOptions(fileset, options("CPU"));
+  }
 }
 
 function faceBoxFromLandmarks(landmarks) {
@@ -239,8 +255,11 @@ $("startBtn").addEventListener("click", async () => {
     setStatus("모델을 내려받는 중… (첫 실행은 몇 초 걸립니다)");
     $("intro").querySelector(".privacy").after($("status"));
     $("status").classList.remove("hidden");
+    probe("start-clicked");
     if (!state.landmarker) await loadLandmarker();
+    probe("landmarker-ok");
     await openCamera();
+    probe("camera-ok");
 
     $("intro").classList.add("hidden");
     document.body.append($("status"));
@@ -256,6 +275,7 @@ $("startBtn").addEventListener("click", async () => {
     state.lastFrameTime = 0;
     requestAnimationFrame(loop);
   } catch (err) {
+    probe("fail-" + encodeURIComponent(err.name + ":" + err.message).slice(0, 80));
     btn.disabled = false;
     btn.textContent = "거울 켜기";
     setStatus(
@@ -276,6 +296,11 @@ $("flipBtn").addEventListener("click", async () => {
     setStatus("이 기기에서는 카메라 전환을 지원하지 않습니다");
   }
 });
+
+// ?autostart=1 — 자동 시작 (키오스크·테스트용)
+if (new URLSearchParams(location.search).has("autostart")) {
+  $("startBtn").click();
+}
 
 // 탭을 벗어나면 카메라 정지, 돌아오면 재개
 document.addEventListener("visibilitychange", async () => {

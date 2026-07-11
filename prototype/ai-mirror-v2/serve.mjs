@@ -32,11 +32,14 @@ const MIME = {
   ".webp": "image/webp",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon",
+  ".wasm": "application/wasm",
+  ".task": "application/octet-stream",
 };
 
 async function handler(req, res) {
   try {
     const urlPath = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    console.log(new Date().toISOString().slice(11, 19), req.method, urlPath);
     let filePath = normalize(join(ROOT, urlPath === "/" ? "index.html" : urlPath));
     if (!filePath.startsWith(ROOT)) {
       res.writeHead(403).end("Forbidden");
