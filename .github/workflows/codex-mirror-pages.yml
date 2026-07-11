@@ -1,10 +1,11 @@
-name: Deploy Codex Mirror to GitHub Pages
+name: Deploy Mirror Prototypes to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "codex-ai-mirror-prototype/**"
+      - "prototype/ai-mirror-v2/**"
       - ".github/workflows/codex-mirror-pages.yml"
   workflow_dispatch:
 
@@ -24,20 +25,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Verify prototype
+      - name: Verify codex prototype
         working-directory: codex-ai-mirror-prototype
         run: |
           node --check app.js
           node --check server.mjs
           node smoke-test.mjs
 
+      - name: Verify ai-mirror-v2
+        working-directory: prototype/ai-mirror-v2
+        run: |
+          node --check app.js
+          node --check analyzer.js
+          node --check catalog.js
+          node --check effects.js
+          node --check serve.mjs
+
+      - name: Stage site (root = codex, /v2 = ai-mirror-v2)
+        run: |
+          mkdir -p _site/v2
+          cp -r codex-ai-mirror-prototype/. _site/
+          cp -r prototype/ai-mirror-v2/. _site/v2/
+          rm -f _site/v2/*.pem _site/v2/serve.mjs _site/v2/package.json
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload Codex prototype
+      - name: Upload prototypes
         uses: actions/upload-pages-artifact@v4
         with:
-          path: codex-ai-mirror-prototype
+          path: _site
 
   deploy:
     environment:
@@ -49,4 +66,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
