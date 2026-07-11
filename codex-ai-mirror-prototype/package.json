@@ -1,0 +1,16 @@
+{
+  "name": "codex-mirror-boundary-lab",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A consent-first, local-only AI mirror boundary prototype by Codex",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "start:lan": "node server.mjs --lan",
+    "check": "node --check app.js && node --check server.mjs && node --check smoke-test.mjs",
+    "test": "node smoke-test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

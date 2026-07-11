@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="AI가 사람을 단정하지 않고, 사용자가 해석의 범위와 낯섦을 조절하는 로컬 카메라 프로토타입"
+    />
+    <meta name="theme-color" content="#080808" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <title>Mirror Boundary Lab — Codex Prototype</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 이동</a>
+
+    <div class="app-shell" id="app">
+      <header class="topbar">
+        <a class="wordmark" href="#" data-action="reset" aria-label="처음 화면으로">
+          <span>CODEX</span>
+          <span class="wordmark__muted">MIRROR STUDY 001</span>
+        </a>
+        <div class="topbar__status" aria-label="프로토타입 상태">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>LOCAL / NO UPLOAD</span>
+        </div>
+      </header>
+
+      <main id="main" tabindex="-1">
+        <section class="screen screen--intro is-active" id="screen-intro" data-screen="intro" aria-labelledby="intro-title">
+          <div class="intro-orbit" aria-hidden="true">
+            <span class="intro-orbit__ring intro-orbit__ring--one"></span>
+            <span class="intro-orbit__ring intro-orbit__ring--two"></span>
+            <span class="intro-orbit__core"></span>
+          </div>
+
+          <div class="intro-copy">
+            <p class="kicker">MIRROR BOUNDARY LAB / 2026</p>
+            <h1 id="intro-title">
+              THE MIRROR<br />
+              DOESN'T KNOW<br />
+              <span>YOU.</span>
+            </h1>
+            <p class="intro-copy__lead">
+              이 거울은 당신을 진단하지 않습니다.<br />
+              무엇을 읽고, 얼마나 낯설게 돌려줄지 당신이 정합니다.
+            </p>
+            <div class="intro-actions">
+              <button class="button button--primary" type="button" data-action="start">
+                <span>경계 실험 시작</span>
+                <span aria-hidden="true">↗</span>
+              </button>
+              <span class="time-note">약 1분 · 브라우저 안에서만 작동</span>
+            </div>
+            <p class="prototype-disclaimer">
+              <span>V0.2 / MOBILE PROTOTYPE</span>
+              실험 01의 관찰을 Canvas 규칙으로 옮긴 인터랙션 가설입니다. 실시간 생성 AI 결과가 아닙니다.
+            </p>
+          </div>
+
+          <aside class="premise-card" aria-label="연구 가설">
+            <span class="premise-card__number">HYPOTHESIS 01</span>
+            <p>
+              개인화는 AI가 더 많이 알아맞힐 때가 아니라,<br />
+              사용자가 해석의 경계를 통제할 때 편안해지는가?
+            </p>
+          </aside>
+        </section>
+
+        <section class="screen screen--consent" id="screen-consent" data-screen="consent" aria-labelledby="consent-title" hidden>
+          <div class="section-heading">
+            <p class="kicker">00 / BEFORE THE MIRROR</p>
+            <h2 id="consent-title">원본 얼굴 프레임은<br />전송되지 않습니다.</h2>
+          </div>
+
+          <div class="consent-panel">
+            <div class="consent-points">
+              <div class="consent-point">
+                <span>01</span>
+                <p><strong>기기 안에서만</strong> 실시간 프레임이나 선택한 사진은 현재 브라우저 메모리에서만 처리됩니다.</p>
+              </div>
+              <div class="consent-point">
+                <span>02</span>
+                <p><strong>자동 판단 없이</strong> 얼굴형, 성별, 나이, 감정을 추측하지 않습니다.</p>
+              </div>
+              <div class="consent-point">
+                <span>03</span>
+                <p><strong>즉시 지우기</strong> 처음으로 돌아가거나 창을 닫으면 현재 프레임과 선택한 사진이 사라집니다.</p>
+              </div>
+              <div class="consent-point">
+                <span>04</span>
+                <p><strong>파생 기록만 선택 저장</strong> JSON에는 이미지 없이 명도·대비 등 시각 신호, 선택값, 소요 시간만 포함됩니다.</p>
+              </div>
+            </div>
+
+            <label class="consent-check">
+              <input id="consent-checkbox" type="checkbox" />
+              <span class="consent-check__box" aria-hidden="true"></span>
+              <span>카메라 또는 선택한 사진의 로컬 처리와 파생 신호 계산을 이해했고, 현재 세션에서 사용하는 데 동의합니다.</span>
+            </label>
+
+            <p class="form-message" id="consent-message" role="status"></p>
+
+            <div class="button-row">
+              <button class="button button--ghost" type="button" data-action="back-intro">이전</button>
+              <button class="button button--primary" type="button" data-action="enter-camera">
+                촬영 방식 선택 <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen screen--capture" id="screen-capture" data-screen="capture" aria-labelledby="capture-title" hidden>
+          <div class="section-heading section-heading--compact">
+            <p class="kicker">01 / FRAME</p>
+            <h2 id="capture-title">읽히고 싶은 만큼만<br />프레임 안에 서세요.</h2>
+            <p class="section-heading__body">
+              지금 단계에서는 이미지가 전송되지 않습니다. 브라우저가 밝기·대비·색온도 같은 시각 신호만 계산합니다.
+            </p>
+          </div>
+
+          <div class="capture-layout">
+            <div class="mirror-frame" id="mirror-frame">
+              <video id="camera-video" autoplay muted playsinline aria-label="실시간 카메라 화면"></video>
+              <canvas id="capture-canvas" width="720" height="900" hidden></canvas>
+              <div class="demo-portrait" id="demo-portrait" hidden role="img" aria-label="카메라 대체용 추상 샘플 화면">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="frame-guide" aria-hidden="true">
+                <span class="frame-guide__corner frame-guide__corner--tl"></span>
+                <span class="frame-guide__corner frame-guide__corner--tr"></span>
+                <span class="frame-guide__corner frame-guide__corner--bl"></span>
+                <span class="frame-guide__corner frame-guide__corner--br"></span>
+              </div>
+              <div class="camera-state" id="camera-state">
+                <span class="camera-state__pulse"></span>
+                <span id="camera-state-text">카메라 연결 중</span>
+              </div>
+              <button class="camera-switch" id="camera-switch" type="button" data-action="switch-camera" aria-label="전면과 후면 카메라 전환" disabled>
+                <span aria-hidden="true">↻</span>
+                <span id="camera-facing-label">전면</span>
+              </button>
+            </div>
+
+            <div class="capture-controls">
+              <div class="capture-controls__index">LOCAL FRAME / 01</div>
+              <p id="camera-help">실시간 카메라를 연결하거나, 휴대폰 기본 카메라로 한 장을 촬영할 수 있어요.</p>
+              <p class="connection-note" id="connection-note"></p>
+              <p class="form-message" id="camera-message" role="status"></p>
+              <button class="button button--primary button--wide" id="capture-button" type="button" data-action="capture" disabled>
+                이 순간 사용하기 <span aria-hidden="true">◎</span>
+              </button>
+              <button class="text-button" type="button" data-action="demo-frame">
+                카메라 없이 추상 샘플로 체험
+              </button>
+              <button class="text-button" type="button" data-action="restart-camera">
+                카메라 다시 연결
+              </button>
+
+              <div class="mobile-capture">
+                <div class="mobile-capture__heading">
+                  <span>PHONE CAMERA / FALLBACK</span>
+                  <span>원본 업로드 없음</span>
+                </div>
+                <p>실시간 카메라가 막히면 휴대폰 기본 카메라로 한 장을 찍어 같은 흐름을 계속할 수 있습니다.</p>
+                <div class="mobile-capture__buttons">
+                  <input
+                    class="visually-hidden"
+                    id="phone-user-input"
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    data-photo-facing="user"
+                  />
+                  <label class="capture-choice" for="phone-user-input">
+                    <span aria-hidden="true">◉</span>
+                    <span>전면 카메라 촬영</span>
+                  </label>
+                  <input
+                    class="visually-hidden"
+                    id="phone-environment-input"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    data-photo-facing="environment"
+                  />
+                  <label class="capture-choice" for="phone-environment-input">
+                    <span aria-hidden="true">◎</span>
+                    <span>후면 카메라 촬영</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen screen--interpret" id="screen-interpret" data-screen="interpret" aria-labelledby="interpret-title" hidden>
+          <div class="section-heading section-heading--compact">
+            <p class="kicker">02 / INTERPRET</p>
+            <h2 id="interpret-title">거울의 문장을<br />당신이 선택합니다.</h2>
+            <p class="section-heading__body">
+              측정된 것은 이미지의 표면 신호뿐입니다. 아래 문장들은 서로 다른 번역 가설이며, 정답이나 성격 진단이 아닙니다.
+            </p>
+          </div>
+
+          <div class="interpret-layout">
+            <div class="signal-card">
+              <canvas id="preview-canvas" width="360" height="450" role="img" aria-label="선택한 프레임 미리보기"></canvas>
+              <div class="signal-card__readout">
+                <span>VISIBLE SIGNALS</span>
+                <ul id="signal-list"></ul>
+              </div>
+            </div>
+
+            <div class="interpretations" id="interpretation-grid" aria-label="해석 문장 선택"></div>
+          </div>
+        </section>
+
+        <section class="screen screen--transform" id="screen-transform" data-screen="transform" aria-labelledby="transform-title" hidden>
+          <div class="section-heading section-heading--compact">
+            <p class="kicker">03 / BOUNDARY</p>
+            <h2 id="transform-title">낯섦의 거리를<br />직접 조절하세요.</h2>
+          </div>
+
+          <div class="transform-layout">
+            <div class="scene-frame" id="scene-frame">
+              <canvas id="scene-canvas" width="960" height="1120" role="img" aria-label="선택한 경계와 물성으로 변환된 거울 장면"></canvas>
+              <div class="scene-scan" aria-hidden="true"></div>
+              <div class="scene-label">
+                <span id="scene-material-label">LIQUID CHROME</span>
+                <span id="scene-distance-label">DISTANCE 42</span>
+              </div>
+            </div>
+
+            <div class="boundary-controls">
+              <fieldset class="control-group">
+                <legend>해석할 범위</legend>
+                <div class="segmented" id="scope-options">
+                  <label><input type="radio" name="scope" value="silhouette" checked /><span>추상 실루엣</span></label>
+                  <label><input type="radio" name="scope" value="mood" /><span>선택한 무드</span></label>
+                  <label><input type="radio" name="scope" value="space" /><span>인물 + 공간</span></label>
+                </div>
+                <p class="scope-note" id="scope-note">원본 프레임 픽셀을 결과 장면에 사용하지 않습니다.</p>
+              </fieldset>
+
+              <fieldset class="control-group">
+                <legend>되돌려 받을 물성</legend>
+                <div class="material-options" id="material-options">
+                  <label>
+                    <input type="radio" name="material" value="chrome" checked />
+                    <span><i class="swatch swatch--chrome"></i>액체 크롬</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="material" value="glass" />
+                    <span><i class="swatch swatch--glass"></i>빛의 유리</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="material" value="signal" />
+                    <span><i class="swatch swatch--signal"></i>초록 신호</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="control-group">
+                <div class="slider-heading">
+                  <label for="distance-slider">낯섦의 거리</label>
+                  <output id="distance-output" for="distance-slider">42</output>
+                </div>
+                <input id="distance-slider" class="boundary-slider" type="range" min="0" max="100" value="42" />
+                <div class="slider-scale"><span>나에 가까움</span><span>완전한 추상</span></div>
+              </div>
+
+              <blockquote id="live-line">“검은 표면 위로, 차가운 빛이 천천히 떠오릅니다.”</blockquote>
+
+              <button class="button button--primary button--wide" type="button" data-action="finish">
+                이 경계로 결정 <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen screen--result" id="screen-result" data-screen="result" aria-labelledby="result-title" hidden>
+          <div class="result-layout">
+            <div class="result-visual">
+              <canvas id="result-canvas" width="960" height="1120" role="img" aria-label="선택한 경계와 물성으로 완성된 최종 거울 장면"></canvas>
+              <span class="result-visual__stamp">BOUNDARY STUDY / 001</span>
+            </div>
+
+            <div class="result-copy">
+              <p class="kicker">04 / YOUR BOUNDARY</p>
+              <h2 id="result-title">이것은 당신에 대한<br />AI의 결론이 아닙니다.</h2>
+              <p class="result-line" id="result-line"></p>
+              <p class="result-explain">
+                당신이 선택한 해석 범위와 낯섦의 강도로 함께 만든 한 장면입니다. 원본 프레임은 서버로 전송되거나 자동 저장되지 않습니다. 저장 버튼을 누르면 현재 결과만 이 기기에 내려받습니다.
+              </p>
+
+              <div class="session-summary" id="session-summary"></div>
+
+              <fieldset class="feedback" id="feedback-panel">
+                <legend>한 번만 더 알려주세요.</legend>
+                <div class="feedback-question">
+                  <span>나를 위한 결과처럼 느껴졌나요?</span>
+                  <div class="rating" data-rating="personal" aria-label="개인화 체감 평가"></div>
+                </div>
+                <div class="feedback-question">
+                  <span>얼굴을 사용한 과정이 불편했나요?</span>
+                  <div class="rating" data-rating="comfort" aria-label="불편함 평가"></div>
+                </div>
+              </fieldset>
+
+              <div class="result-actions">
+                <button class="button button--primary" type="button" data-action="save-image">장면 저장</button>
+                <button class="button button--ghost" type="button" data-action="export-log">실험 기록 저장</button>
+                <button class="text-button" type="button" data-action="reset">프레임 지우고 다시 시작</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>CODEX PROTOTYPE / NOT AN OFFICIAL BRAND PRODUCT</span>
+        <span id="footer-step">STEP 00 / 04</span>
+      </footer>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
