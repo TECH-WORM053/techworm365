@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI MIRROR — prototype v0.1</title>
+  <title>AI MIRROR — prototype v0.2</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,12 +13,12 @@
   <section id="consent" class="screen active">
     <div class="consent-box">
       <p class="brand">AI MIRROR</p>
-      <p class="version">prototype v0.1</p>
+      <p class="version">prototype v0.2</p>
 
       <p class="consent-lead">이 거울은 당신을 판매하지 않습니다.<br />해석할 뿐입니다.</p>
 
       <ul class="consent-terms">
-        <li>시작하면 카메라가 켜지고, 버튼을 누르면 사진 한 장을 찍습니다.</li>
+        <li>시작하면 카메라가 켜지고, 거울 앞에 잠시 멈춰 서면 사진 한 장을 찍습니다.</li>
         <li>사진은 해석을 위해 AI(Claude)에 한 번 전달된 뒤 <strong>즉시 폐기</strong>됩니다.</li>
         <li>이 컴퓨터를 포함해 어디에도 사진을 저장하지 않습니다.</li>
       </ul>
@@ -30,16 +30,27 @@
 
   <!-- 2. 거울 화면 -->
   <section id="mirror" class="screen">
-    <video id="video" autoplay playsinline muted></video>
-    <div id="tint" class="tint"></div>
+    <!-- 실제 카메라 영상 (숨김) — 모든 그리기는 canvas에서 -->
+    <video id="video" autoplay playsinline muted class="hidden"></video>
+    <canvas id="stage"></canvas>
+    <div id="grain" class="grain"></div>
 
     <div class="hud">
       <p class="brand small">AI MIRROR</p>
       <p id="mode-badge" class="mode-badge hidden"></p>
     </div>
 
-    <!-- 카운트다운 -->
-    <div id="countdown" class="countdown hidden"></div>
+    <!-- 왼쪽 위: 추천 아이템 목록 -->
+    <aside id="reco" class="reco hidden">
+      <p class="reco-title">FOR YOUR MOOD</p>
+      <ul id="reco-list" class="reco-list"></ul>
+    </aside>
+
+    <!-- 안내 문구 (대기 중) -->
+    <p id="hint" class="hint">거울 앞에 잠시 멈춰 서 주세요</p>
+
+    <!-- 정지 인식 진행 링 -->
+    <div id="ring" class="ring hidden"><div class="ring-fill"></div></div>
 
     <!-- 해석 중 -->
     <div id="reading" class="reading hidden">
@@ -59,14 +70,13 @@
     <p id="mirror-error" class="mirror-error hidden"></p>
 
     <div class="controls">
-      <button id="btn-read" class="btn-shutter" aria-label="읽기">
+      <button id="btn-read" class="btn-shutter hidden" aria-label="읽기">
         <span class="btn-shutter-label">읽기</span>
       </button>
-      <button id="btn-again" class="btn-secondary hidden">다시 읽기</button>
+      <button id="btn-again" class="btn-secondary hidden">처음으로</button>
     </div>
   </section>
 
-  <canvas id="capture-canvas" class="hidden"></canvas>
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
