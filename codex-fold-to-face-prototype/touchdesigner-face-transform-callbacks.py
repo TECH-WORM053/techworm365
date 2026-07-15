@@ -59,7 +59,7 @@ def onCook(scriptOp):
     tracked_yaw = _clamp(-rot_y * 0.45, -32.0, 32.0)
     tracked_pitch = _clamp(rot_x * 0.5, -20.0, 20.0)
     tracked_roll = _clamp(rot_z, -30.0, 30.0)
-    object_scale = _clamp(depth * 1.23, 0.12, 0.45)
+    object_scale = _clamp(depth * 1.6, 0.16, 0.6)
 
     values = {
         'pos_x': pos_x, 'pos_y': pos_y, 'depth': depth,

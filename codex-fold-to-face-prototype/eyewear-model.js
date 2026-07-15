@@ -29,13 +29,13 @@ export function createSilverVineGlasses(){
   const makeTemple=side=>{
     const pivot=new THREE.Group();pivot.name=side<0?"Temple_L":"Temple_R";pivot.position.set(side*1.3,.03,-.01);
     const paths=[
-      [[0,0,0],[side*.12,.12,-.18],[side*.03,.2,-.42],[side*.18,.08,-.68],[side*.08,.18,-.94],[side*.16,.03,-1.22],[side*.13,-.02,-1.62]],
-      [[0,-.03,.01],[side*.08,-.16,-.22],[side*.2,-.08,-.48],[side*.04,.06,-.74],[side*.2,-.05,-1.02],[side*.1,-.09,-1.35]],
-      [[side*.02,.04,-.02],[side*.2,-.02,-.25],[side*.08,.1,-.52],[side*.24,.16,-.78],[side*.04,.02,-1.03],[side*.17,-.04,-1.3]]
+      [[0,0,0],[side*.12,.12,-.18],[side*.16,.2,-.42],[side*.28,.08,-.68],[side*.3,.18,-.94],[side*.42,.03,-1.22],[side*.48,-.02,-1.62]],
+      [[0,-.03,.01],[side*.08,-.16,-.22],[side*.15,-.08,-.48],[side*.24,.06,-.74],[side*.28,-.05,-1.02],[side*.4,-.09,-1.35]],
+      [[side*.02,.04,-.02],[side*.1,-.02,-.25],[side*.18,.1,-.52],[side*.26,.16,-.78],[side*.34,.02,-1.03],[side*.44,-.04,-1.3]]
     ];
     paths.forEach((path,i)=>{const wire=tube(path,i===0?.026:.018,metal);wire.name=`Vine_Wire_${i+1}`;pivot.add(wire)});
     [[.1,.12,-.2],[.18,-.07,-.48],[.12,.12,-.77],[.16,-.03,-1.05]].forEach((p,i)=>{const bead=new THREE.Mesh(new THREE.SphereGeometry(i%2?.035:.05,12,8),metal);bead.position.set(side*p[0],p[1],p[2]);pivot.add(bead)});
-    const tip=tube([[side*.13,-.02,-1.35],[side*.1,-.02,-1.7],[side*.13,-.08,-1.95],[side*.1,-.19,-2.12]],.038,metal);tip.name="Ear_Tip";pivot.add(tip);
+    const tip=tube([[side*.4,-.02,-1.35],[side*.5,-.02,-1.7],[side*.58,-.08,-1.95],[side*.62,-.19,-2.12]],.038,metal);tip.name="Ear_Tip";pivot.add(tip);
     const hinge=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.13,12),metal);hinge.rotation.x=Math.PI/2;hinge.name="Hinge";pivot.add(hinge);root.add(pivot);return pivot;
   };
   const leftArm=makeTemple(-1),rightArm=makeTemple(1);root.userData.model="Codex Silver Vine 001";return{root,leftArm,rightArm};
