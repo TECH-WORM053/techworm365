@@ -1,66 +1,67 @@
 # Mobile Camera & HTTPS Deployment
 
-## 구현된 모바일 경로
-
-### 1. HTTPS 실시간 미러
-
-휴대폰에서 HTTPS 주소로 접속하면 `getUserMedia()`를 사용해 실시간 전면·후면 카메라를 엽니다.
-
-- 화면의 `전면/후면 전환` 버튼으로 카메라 방향 변경
-- 전면 미리보기와 촬영 결과만 거울처럼 좌우 반전
-- 후면 카메라는 반전하지 않음
-- 카메라 스트림은 촬영, 화면 이탈, 탭 숨김, 초기화 시 중지
-
-### 2. 휴대폰 기본 카메라로 한 장 촬영
-
-실시간 카메라가 막혀도 다음 입력을 사용할 수 있습니다.
-
-- 전면 촬영: `capture="user"`
-- 후면 촬영: `capture="environment"`
-- 지원하지 않는 브라우저에서는 일반 사진 선택 창으로 대체
-
-선택한 파일은 Blob URL로 현재 브라우저 메모리에서 디코딩합니다. 파일명, EXIF, MIME, 원본 크기를 로그에 남기지 않으며 Blob URL은 Canvas 복사 직후 폐기합니다.
-
-## PC와 같은 와이파이에서 임시 확인
-
-```powershell
-node server.mjs --lan
-```
-
-서버 출력의 `Phone one-shot mode` 주소를 휴대폰에서 엽니다. 예:
-
-```text
-http://192.168.0.10:5174
-```
-
-이 HTTP 주소에서는 브라우저 보안 정책상 실시간 영상이 열리지 않습니다. 대신 `전면 카메라 촬영` 또는 `후면 카메라 촬영` 버튼으로 한 장 촬영을 확인할 수 있습니다. Windows 방화벽이 연결을 막으면 로컬 네트워크 접근 허용이 별도로 필요할 수 있습니다.
-
-`--lan`은 `10.x`, `172.16–31.x`, `192.168.x`, `169.254.x` 사설 주소가 발견될 때만 서버를 해당 주소에 엽니다. 사설 주소가 없으면 안전을 위해 localhost 전용 상태를 유지합니다.
-
-## GitHub Pages HTTPS 배포
-
-저장소 루트의 `.github/workflows/codex-mirror-pages.yml`은 이 폴더만 GitHub Pages 아티팩트로 올립니다.
-
-공식 문서 기준 사용 버전:
-
-- `actions/checkout@v6`
-- `actions/configure-pages@v5`
-- `actions/upload-pages-artifact@v4`
-- `actions/deploy-pages@v4`
-
-배포 전 GitHub 저장소의 `Settings → Pages → Build and deployment → Source`를 **GitHub Actions**로 설정해야 합니다. 이후 워크플로와 이 폴더를 `main`에 push하면 HTTPS 주소가 생성됩니다.
-
-예상 기본 주소:
+## 휴대폰에서 여는 주소
 
 ```text
 https://tech-worm053.github.io/techworm365/
 ```
 
-실제 주소는 GitHub Actions의 `Deploy to GitHub Pages` 작업 결과에 표시됩니다.
+휴대폰의 Chrome 또는 Safari에서 위 HTTPS 주소를 열고 `카메라 켜기`를 누른 뒤 카메라 권한을 허용합니다. 첫 실행에는 로컬 비전 모델과 WASM을 받기 때문에 네트워크 상태에 따라 몇 초 더 걸릴 수 있습니다.
 
-## 개인정보 경계
+## 구현된 모바일 동작
 
-- 호스팅 서비스는 일반적인 페이지 요청 로그(IP, User-Agent 등)를 보유할 수 있습니다.
-- 프로토타입 JavaScript는 사진, Canvas 픽셀, 카메라 스트림을 호스팅 서버로 보내지 않습니다.
-- 정적 배포에서도 HTML의 CSP가 외부 연결을 제한합니다.
-- PNG 또는 JSON은 사용자가 저장/공유 버튼을 눌렀을 때만 현재 기기에서 내보냅니다.
+- `getUserMedia()` 기반 연속 카메라 스트림
+- `playsinline`으로 iPhone 전체화면 영상 전환 방지
+- 전면 카메라는 영상·인물 마스크·얼굴 좌표를 함께 좌우 반전
+- 후면 카메라는 반전 없이 표시
+- 카메라 전환 시 이전 트랙을 중지한 뒤 새 트랙 연결
+- 화면을 닫거나 처음으로 돌아가면 카메라 트랙 중지
+- 긴 변 1280px 이하의 내부 Canvas와 분리된 추론 주기로 모바일 부하 제한
+
+사진 촬영 또는 파일 업로드 대체 경로는 없습니다. 카메라가 없는 환경에서는 `카메라 없이 데모`로 화면 구성만 확인할 수 있습니다.
+
+## 열리지 않을 때
+
+### iPhone Safari
+
+1. 주소가 `https://`인지 확인합니다.
+2. 주소창 왼쪽의 페이지 메뉴 → 웹사이트 설정 → 카메라 → 허용을 선택합니다.
+3. 다른 카메라 앱이나 영상 통화 앱을 닫고 페이지를 새로고침합니다.
+
+### Android Chrome
+
+1. 주소창 자물쇠/사이트 정보 → 권한 → 카메라 → 허용을 선택합니다.
+2. Chrome의 Android 앱 권한에도 카메라가 허용되어 있는지 확인합니다.
+3. 카메라가 검게 나오면 다른 카메라 앱을 닫고 `다시 연결`을 누릅니다.
+
+### 모델 준비 화면이 오래 유지될 때
+
+- Wi-Fi나 데이터 연결을 확인하고 한 번 새로고침합니다.
+- 브라우저의 절전 모드를 해제합니다.
+- 메모리가 적은 기기는 자동으로 `PERSON MASK / ECO` 또는 `FACE TRACK / LITE`로 내려갑니다.
+
+## PC 로컬 실행
+
+```powershell
+cmd /c npm run start
+```
+
+PC에서는 `http://127.0.0.1:5174`를 사용합니다. 같은 와이파이의 `http://192.168...` 주소는 휴대폰 카메라의 보안 컨텍스트가 아니므로 라이브 확인용으로 사용하지 않습니다.
+
+## GitHub Pages 배포
+
+저장소의 `.github/workflows/codex-mirror-pages.yml`은 `codex-ai-mirror-prototype/`만 Pages 아티팩트로 배포합니다. 저장소의 `Settings → Pages → Source`가 `GitHub Actions`로 설정된 상태에서 `main`에 push하면 다시 배포됩니다.
+
+배포 전 검사:
+
+```powershell
+cmd /c npm run check
+cmd /c npm test
+```
+
+## 네트워크와 개인정보
+
+- GitHub Pages는 일반적인 페이지 요청 로그를 보유할 수 있습니다.
+- 브라우저는 같은 출처에서 앱 코드, MediaPipe WASM·모델, 제품 이미지를 내려받습니다.
+- 카메라 프레임, 인물 마스크, 얼굴 랜드마크, 추천 계산값은 업로드하지 않습니다.
+- CSP는 스크립트·모델 연결을 같은 출처로 제한합니다.

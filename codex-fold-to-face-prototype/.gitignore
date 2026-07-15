@@ -1,0 +1,11 @@
+# 라이브러리 캐시 (npm install 로 재설치 가능)
+node_modules/
+npm-debug.log*
+
+# 파이썬 임시 캐시
+__pycache__/
+*.pyc
+
+# 다운로드한 블렌더 설치본 (소스 아님, 100MB 초과 파일 포함)
+tools/
+*.zip

@@ -1,0 +1,36 @@
+.error {
+  display: none;
+  max-width: 560px;
+  margin: 14px 20px 0;
+  color: #ff8d7a;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+.error.show { display: block; }
+button:disabled { cursor: wait; opacity: .6; }
+.gesture-help {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(0,0,0,.36);
+  font-size: 9px;
+  letter-spacing: .1em;
+  pointer-events: none;
+}
+.gesture-help b { color: #d8ff3e; margin-bottom: 3px; }
+.gesture-help span { color: #aaa; }
+#handFx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+#three { z-index: 3; }

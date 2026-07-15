@@ -34,6 +34,9 @@ const mimeTypes = {
   ".mjs": "text/javascript; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".task": "application/octet-stream",
+  ".tflite": "application/octet-stream",
+  ".wasm": "application/wasm",
   ".webp": "image/webp",
 };
 
@@ -43,9 +46,10 @@ const securityHeaders = {
     "default-src 'self'",
     "img-src 'self' data: blob:",
     "media-src 'self' blob:",
-    "script-src 'self'",
+    "script-src 'self' 'wasm-unsafe-eval'",
     "style-src 'self'",
-    "connect-src 'none'",
+    "connect-src 'self'",
+    "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "frame-ancestors 'none'",
@@ -91,8 +95,8 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Codex Mirror Boundary Lab: http://127.0.0.1:${port}`);
-  if (host !== "127.0.0.1") console.log(`Phone one-shot mode: http://${host}:${port}`);
+  console.log(`Codex Live Vision Mirror: http://${host}:${port}`);
+  if (host !== "127.0.0.1") console.log(`LAN preview: http://${host}:${port}`);
   if (lanRequested && privateLanAddresses.length === 0) {
     console.log("No private Wi-Fi address found; LAN exposure was not enabled.");
   }

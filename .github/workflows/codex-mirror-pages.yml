@@ -28,9 +28,8 @@ jobs:
       - name: Verify codex prototype
         working-directory: codex-ai-mirror-prototype
         run: |
-          node --check app.js
-          node --check server.mjs
-          node smoke-test.mjs
+          npm run check
+          npm test
 
       - name: Verify ai-mirror-v2
         working-directory: prototype/ai-mirror-v2
