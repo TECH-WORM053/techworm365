@@ -8,6 +8,7 @@ const vertexShader = `
   uniform float uScatter;
   uniform float uPointSize;
   uniform float uTime;
+  uniform float uVisibility;
   varying vec3 vColor;
   float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1,311.7,74.7))) * 43758.5453); }
   void main() {
@@ -36,7 +37,7 @@ const fragmentShader = `
     if (d > .5) discard;
     float alpha = smoothstep(.5, .16, d);
     vec3 glow = vColor * (1.35 + alpha * .55);
-    gl_FragColor = vec4(glow, alpha);
+    gl_FragColor = vec4(glow, alpha * uVisibility);
   }
 `;
 
@@ -68,7 +69,7 @@ export class PointCloudScene {
     this.morph = 0;
     this.morphTarget = 0;
     this.scatter = 0;
-    this.wasPinching = false;
+    this.visibility = 0;
     this.shapeIndex = 0;
   }
 
@@ -89,7 +90,7 @@ export class PointCloudScene {
     geometry.setAttribute("targetColor", new THREE.BufferAttribute(torus.getAttribute("color").array.slice(0, count * 3), 3));
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        uMorph: { value: 0 }, uScatter: { value: 0 }, uPointSize: { value: innerWidth < 600 ? 5.2 : 4.2 }, uTime: { value: 0 },
+        uMorph: { value: 0 }, uScatter: { value: 0 }, uPointSize: { value: innerWidth < 600 ? 5.2 : 4.2 }, uTime: { value: 0 }, uVisibility: { value: 0 },
       },
       vertexShader, fragmentShader, vertexColors: true, transparent: true,
       blending: THREE.AdditiveBlending, depthWrite: false,
@@ -108,18 +109,19 @@ export class PointCloudScene {
 
   update(signal, now) {
     if (!this.points) return;
-    if (this.wasPinching && !signal.pinching) {
+    if (signal.released) {
       this.shapeIndex = 1 - this.shapeIndex;
       this.morphTarget = this.shapeIndex;
     }
-    this.wasPinching = signal.pinching;
-    this.scatter += ((signal.pinching ? signal.pinch : 0) * .72 - this.scatter) * .14;
+    this.visibility += ((signal.active ? 1 : 0) - this.visibility) * .13;
+    this.scatter += ((signal.active && signal.pinching ? signal.pinch : 0) * .72 - this.scatter) * .14;
     this.morph += (this.morphTarget - this.morph) * .055;
     this.points.material.uniforms.uMorph.value = this.morph;
     this.points.material.uniforms.uScatter.value = this.scatter;
     this.points.material.uniforms.uTime.value = now * .001;
+    this.points.material.uniforms.uVisibility.value = this.visibility;
     if (signal.active) {
-      this.group.position.x += (((.5 - signal.x) * 3.0) - this.group.position.x) * .16;
+      this.group.position.x += ((((signal.screenX ?? (1 - signal.x)) - .5) * 3.0) - this.group.position.x) * .16;
       this.group.position.y += (((.5 - signal.y) * 4.2) - this.group.position.y) * .16;
       const s = signal.scale;
       this.group.scale.lerp(new THREE.Vector3(s, s, s), .13);

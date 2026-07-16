@@ -56,14 +56,20 @@ async function startCamera() {
 
 function frame(now) {
   if (!running) return;
-  const signal = tracker.process(now);
+  const signal = tracker.process(now, facingMode === "user");
+  signal.screenX = facingMode === "user" ? 1 - signal.x : signal.x;
   cloud.update(signal, now);
-  gesture.textContent = !signal.active ? "SHOW HAND" : signal.pinching ? "PINCH" : signal.hands > 1 ? "TWO HANDS" : "TRACKING";
+  gesture.textContent = !signal.leftActive
+    ? "SPREAD LEFT"
+    : !signal.rightActive
+      ? "SHOW RIGHT"
+      : signal.pinching
+        ? "RIGHT PINCH"
+        : "RIGHT OPEN";
   shape.textContent = cloud.shapeIndex ? "TORUS" : "SPHERE";
   reticle.hidden = !signal.active;
   if (signal.active) {
-    const displayX = facingMode === "user" ? signal.x : 1 - signal.x;
-    reticle.style.left = `${displayX * 100}%`;
+    reticle.style.left = `${signal.screenX * 100}%`;
     reticle.style.top = `${signal.y * 100}%`;
     reticle.classList.toggle("is-pinching", signal.pinching);
   }
