@@ -31,6 +31,7 @@ const vertexShader = `
 const fragmentShader = `
   precision highp float;
   varying vec3 vColor;
+  uniform float uVisibility;
   void main() {
     vec2 uv = gl_PointCoord - .5;
     float d = length(uv);

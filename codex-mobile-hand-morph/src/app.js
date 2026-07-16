@@ -56,7 +56,7 @@ async function startCamera() {
 
 function frame(now) {
   if (!running) return;
-  const signal = tracker.process(now, facingMode === "user");
+  const signal = tracker.process(now);
   signal.screenX = facingMode === "user" ? 1 - signal.x : signal.x;
   cloud.update(signal, now);
   gesture.textContent = !signal.leftActive

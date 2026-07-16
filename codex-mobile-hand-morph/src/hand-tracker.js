@@ -82,7 +82,7 @@ export class HandTracker {
     const rightPoints = right?.landmarks;
     const leftPalm = leftPoints ? Math.max(.025, distance(leftPoints[0], leftPoints[9])) : 1;
     const leftSpread = leftPoints ? distance(leftPoints[4], leftPoints[8]) / leftPalm : 0;
-    const leftReady = Boolean(leftPoints && leftSpread > .78);
+    const leftReady = Boolean(leftPoints && leftSpread > .42);
 
     let x = this.signal.x;
     let y = this.signal.y;
