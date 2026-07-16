@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "codex-ai-mirror-prototype/**"
+      - "codex-mobile-hand-morph/**"
       - "prototype/ai-mirror-v2/**"
       - ".github/workflows/codex-mirror-pages.yml"
   workflow_dispatch:
@@ -40,11 +41,26 @@ jobs:
           node --check effects.js
           node --check serve.mjs
 
-      - name: Stage site (root = codex, /v2 = ai-mirror-v2)
+      - name: Set up Node for mobile hand morph
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: codex-mobile-hand-morph/package-lock.json
+
+      - name: Build mobile hand morph
+        working-directory: codex-mobile-hand-morph
         run: |
-          mkdir -p _site/v2
+          npm ci
+          npm run check
+          npm run build
+
+      - name: Stage site (root = codex, /v2 = ai-mirror-v2, /hand-morph = mobile)
+        run: |
+          mkdir -p _site/v2 _site/hand-morph
           cp -r codex-ai-mirror-prototype/. _site/
           cp -r prototype/ai-mirror-v2/. _site/v2/
+          cp -r codex-mobile-hand-morph/dist/. _site/hand-morph/
           rm -f _site/v2/*.pem _site/v2/serve.mjs _site/v2/package.json
 
       - name: Configure GitHub Pages
