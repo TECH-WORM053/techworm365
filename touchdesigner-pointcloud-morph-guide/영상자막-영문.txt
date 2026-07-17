@@ -1,0 +1,438 @@
+ Hi everyone, today we'll be going over how I did this effect in Touch Designer
+ using
+ point clouds and tops.
+ So here I used MediaPipe to control morphing, but for the sake of simplicity, we'll
+ just
+ use our keyboard.
+ So if you hold down the one key on your keyboard and release, it will morph in the
+ exact same
+ way as the demo video.
+ We'll also just use two, but you can use as many point clouds as you like and you
+ can
+ use whatever models you like as well.
+ So for a quick overview of the project, we are going to learn how to create an instancing
+ network using positions and color data.
+ We're going to set up a little system to control the particles exploding and then
+ morphing
+ back into place smoothly, how to make a quick little cage for the particles, and
+ some really
+ simple post-processing to create this really cool effect.
+ So without further ado, let's get started.
+ Alright, so the first thing we're going to want to do is import our point cloud
+ file.
+ So hit tab, and then because we're using tops, select the point file in, and then
+ this way
+ you can add your point cloud file.
+ It's important to note that if you hit red, green, and blue, you'll have these
+ options,
+ but not all point cloud files have that.
+ The general gist is for red, green, and blue, it's probably going to be either XYZ,
+ RGB,
+ or red, green, blue.
+ Select one of those for these.
+ But for today, I'm just going to copy and paste mine in because I already have them.
+ So yeah, these don't look like the models, but that's fine.
+ The first thing we are going to need to figure out is the sort of number problem.
+ What I mean by that is if you double click and then press info, you'll see that
+ there
+ are 403,225 pixels.
+ For the second model, there are not that many, there are less.
+ So why does this matter?
+ So for instancing, we can think of it like particle number one has sort of its
+ position
+ data and eventually its color data.
+ When we morph them, we need to give it an instruction of like, hey, particle one,
+ instead
+ of being here, I want to move you to some other location with some other color and
+ that's
+ fine.
+ However, as soon as we get to particle 239,122, this doesn't exist.
+ So this particle from the first model will try morphing into something that does
+ not exist.
+ And then you will not be able to do the effect.
+ So the main problem we need to solve is how to make them the same size.
+ This way, no matter what point cloud file you use, whether it's too big or too
+ small,
+ it will have the exact same amount of points.
+ And we can then do this effect for however many clouds we want.
+ So let's first start with handling the position data.
+ So first, we are going to want to add a point transform.
+ This will allow us to, for example, change the scale of all the points later on.
+ This is important now, but we'll get back into it in a bit.
+ So one way we can solve the number issue is using two fit tops.
+ So if we drag and then hit tab and then fit, what we can do is go to common and we
+ can
+ set the output resolution to two times.
+ What this does is it increases the resolution by two times.
+ But what's important is that if you double click, you'll see that there are now
+ over
+ a million particles, way over a million.
+ So we have a lot of particles.
+ But if we go to fit again and we hit common, we can then do output resolution to
+ limit
+ resolution and then I like using 800 by 800, but you might need to do less if your
+ computer
+ can't handle it and you can do more if your computer can't.
+ By doing this now we have 640,000.
+ So this might not seem important, but now if we copy and paste all these, then do
+ like
+ copy, paste and make our second point cloud the input, if we look at the fit 4, it
+ also
+ has 640,000.
+ So this way sort of standardizes how many points there are, so they are all
+ consistent.
+ So that's great.
+ So the last thing we want to do is for fit 1, for input smoothness and viewer
+ smoothness,
+ to nearest pixel, and we want to do the same for the other fit.
+ And then we want to do it for these two as well.
+ And that just helps with the particles looking really crisp later on when we render
+ it.
+ So now we have all of our position data sorted out, so now let's handle color.
+ So what we are going to want to do is hit tab and then do point file select and
+ drag
+ our point cloud right over it.
+ So now it's referencing it, you can see it.
+ And then same thing, click and do red, green and blue.
+ Great.
+ So now something is going on, they're different.
+ So we need to make this into color, and the way you do that is attach a map and
+ then you
+ divide by 127.
+ And then we do it correctly, it should be red.
+ There you go.
+ And I can explain why this is in another video, but it has something to do with how
+ color
+ values are sorted, and they're not between values 0 and 1.
+ So we can do the same thing with the fit trick, select both of these, Command C,
+ Command V,
+ or copy and paste, and then we should see 640,000 pixels, and that we do.
+ So we do the same thing, so just copy and paste this entire network, and then drag
+ your
+ second point cloud to it, and then great.
+ Once again we should see 640,000, and that we do.
+ So now we can set up for our switch system.
+ So go to switch, and tops, and then we need to connect the position nodes to switch,
+ and
+ then do one again for color.
+ So what you can do, if you're really organized, is say for example like position,
+ dragon,
+ and then color, dragon, and then similarly position, butterfly, color, butterfly.
+ And these naming conventions are completely arbitrary.
+ They can be whatever you want.
+ So when people tell you to type POS, COL, it's nothing to do with syntax, at least
+ for now.
+ It's just for your own discretion, whatever helps you understand it.
+ So if you wanted to, you could say for example, I don't know, position, drag, that
+ works too.
+ But this is just a really simple way of doing it.
+ So now we are going to want to attach both of our position nodes to switch with our
+ color
+ nodes into the other switch.
+ So now we can see in the switch one if we press P, that we have two inputs, one for
+ the dragon, one for the butterfly, and for color, same thing.
+ Important for both of them, we want to blend between inputs.
+ This is because, for example, if you have values between 0 and 1, let's say you
+ want
+ to morph something halfway between the dragon and the butterfly, if you blend
+ between inputs,
+ it will allow you to have a sort of blend, and that's what gives you that really
+ clean
+ morphing effect where everything switches at the same time.
+ Great.
+ And then we can sort of really neatly tie this up by adding a null.
+ When I first used Tush Designer, I didn't really understand why people use nulls,
+ but
+ an analogy is that you can treat them like periods in sentences.
+ So when you write an essay, you don't have to use periods, but it allows you to
+ discern
+ when you finish an idea and when you're starting the next one, and that's what we're
+ doing.
+ We have finished creating our system for position data and color data, so we add a
+ null.
+ And we can name it position data and color.
+ So that way, if we make edits in our sentence or our thoughts, then it will remain
+ on effect,
+ but at least we know that's where it ends.
+ So we'll come back to this in a bit.
+ But just so we can sort of see what's going on, we can start setting up a really
+ simple
+ render setup.
+ So fit a tab, go to comp, geometry, then we see this torus.
+ Let's get rid of that.
+ So double click, delete that, hit tab, go to solve, then add, and then P, and then
+ add
+ points.
+ So this will make it such that when we instance, we can add points, and then we
+ need to convert
+ that.
+ Convert, and then it should be from type, convert to particles per point, and then
+ particles
+ type render as point sprites.
+ And then we want to see it in both the render and the geo comp.
+ So purple render, blue for display.
+ Great.
+ So it looks like nothing has happened, which is expected.
+ So now let's add a camera, go to comp, then camera, light, then a render.
+ So then go to top, render, and we still see nothing, which is expected.
+ So now we are going to want to instance our lovely data that we prepared.
+ So one way we can think of instancing is that, believe it or not, each pixel on
+ their color
+ represents a coordinate in this sort of three dimensional space.
+ I will get to that in another video, but each pixel has its own coordinate and
+ geographical
+ position baked into it through the color.
+ Same thing for the actual color.
+ So this is the actual color that I will show.
+ Instead of me manually telling TouchSiner, hey, I want you to put particle two at
+ this
+ XYZ coordinate, we can just reference this and reference this really simply.
+ So we can do so by going to geo one, go to instance, turn instancing on, and then
+ translate
+ off is sort of like the X, Y, and Z position, so sort of like your coordinates.
+ So we are going to want to take our position top, drag it into translate off, then
+ translate
+ XYZ, R, G, B. Now we can see we have something, and I guess it turns out while I
+ was making
+ these models, I didn't take away the bug one, so you can enjoy two, but at least we
+ can
+ see our dragon.
+ Great.
+ And then to add color, we go to the second tab, instance two, go to the color mode,
+ and
+ drag the color top, and once again, R, G, and B. And we can see we have a red
+ dragon.
+ Cool.
+ So now we can adjust the sizes of these points using material, so hit tab, go to
+ that, and
+ then point sprite, and then drag it onto the geo, select the material, and then
+ great.
+ So if you go to point sprite, change the size of these particles, we can change it
+ here.
+ So you want it bigger, obviously drag it up, you want it smaller, you just drag it
+ down.
+ And great.
+ I think it's 0.7, looks pretty cool, so it gives that, you know what it is, but
+ when
+ it morphs, it's pretty obvious.
+ So great.
+ Now we have that.
+ So we now need to switch between each one really cleanly.
+ So now we will create our chop setup so we can do things like switch between them,
+ explode
+ the particles, and all that.
+ So here's how we do it.
+ So the first thing we're going to want to do is use chops.
+ So go to tab, chop, and then keyboard in.
+ So for keyboard in, if we select it to 1, if we hit the number 1 key, let go, it
+ works.
+ We can set this to any number, so 5 as well, it works.
+ You can even set it to letters, but for this video, let's just stick to 1.
+ So when it's morphing, there are a couple of things going on.
+ So first, the particles explode while still being a dragon, or the first model.
+ After you release the keyboard, it will switch all the coordinates, get rid of the
+ explosion,
+ and then it will morph into the second model.
+ So we need to sort of account for that delay, or sort of those chain of events.
+ So the first thing we'll do is set it so that when we hit 1, we have some number
+ that will
+ act as how much the particles explode.
+ So to do that, we can first use a math.
+ So math, put a range, and then we can set the from range and the to range, two
+ values
+ we want to use.
+ So what this does is, for the from range, it says, okay, from my input, this is the
+ range of values, and I want to scale those values to this new range, so if we hit 1,
+ the new max instead of 1 should be, now the max is 0.87, so if we hit 1, we have
+ that.
+ And what I mean by scale down is, for example, this part, you don't have to follow,
+ but let's
+ say we have it, right?
+ So now when we click it, we get the value 0.5.
+ Instead of the value being half of 1, it should now be half of 0.37, and if we hit
+ 1, we can
+ see that work.
+ So that's what I mean by it's scale of the value down.
+ Great.
+ So instead of just it being like, okay, I hold the keyboard, it's immediately that
+ value,
+ we want a sort of gradient, so it happens smoothly.
+ So what we can do is use lag, and if you want smoother animations for anything,
+ this is
+ your go-to.
+ So now if we hold 1, value changes really smoothly.
+ So we'll see here that now there are also two values, so what do they mean?
+ The first one means the lag, or how long it takes to get to the value, where values
+ increase,
+ and the second one for when it decreases.
+ So to make this really exaggerated, let's set this to 5 and 1, and 0.1.
+ So what this means is that it will take five seconds for it going from 0 to 0.37,
+ and to
+ go back down to 0, it's super quick.
+ So if I hold 1, it will take a while to get to the max value, and when I let go, it's
+ really quick.
+ So hold 1.
+ As you can see, it's taking its sweet time getting to 0.37, but if we let go, it's
+ gone
+ immediately.
+ So it's subtle, but it's important, because for the animation visual, you want a
+ really
+ slow expansion, but a really quick morph.
+ So what we can do is play around with it, but I liked 0.7 and 0.2.
+ So once again, we can add a period to our plot, and add a null.
+ So now we know that this is the amplitude, and once again, this is a generic naming
+ convention.
+ You can name this whatever you want, you can leave it at null 1, but this just
+ makes it
+ such that we know, okay, this value is for the amplitude.
+ Great.
+ The second thing we need to do is now add a count.
+ So we need to know that when you let go of it, it will start morphing into the next
+ and
+ blend into the second input.
+ So we need a way to figure out, as this value decreases, it will count up 1.
+ So first we do a lag for really smooth values, once again, 0.5 to 0.2, and to do
+ the count
+ part we use a count chop, so count.
+ And then we need it to trigger on decreasing values, so set to 0.7.
+ So this means that when the value goes from 1 to 0, right, decreasing values, when
+ it
+ gets below 0.7, it will count up, so if we hit 1 and we release, it counts to 1.
+ Great.
+ Now, we only have two inputs, so what happens if we do it again?
+ We are at 0, 1, and 2, so that's not good.
+ So we need to clamp these values, so go to count, limit, loop min and max, and then
+ we
+ can do it to 1, and then reset them.
+ So now, if we hold 1, release, do it again, it will go back to the first input, 0.
+ And we just change this value for however many point clouds we have, so if we have
+ three
+ point clouds, so if we have three point clouds, it will be 2, so it will go from
+ the first
+ input, the second input, the third input, back to the first input.
+ Great.
+ And then, once again, just to make it a little smoother, we add another lag, we add
+ these
+ values, and then we add a null.
+ And then what we can do is, we can name this one index, but once again, these can
+ be named
+ whatever you want, or however it best helps you keep track and understand what
+ everything
+ is doing.
+ So now, if we wire them up, so go back to the switch, for index, you click on this
+ little
+ star icon, then drag it into index, you'll see it turns blue and there's an arrow
+ which
+ means it's being referenced, then similarly we drag it, great.
+ So now, if we hold 1, it should switch really cleanly, once we're back down, it
+ does, great.
+ So now we need the particles to explode, so here's how we do that.
+ So we're gonna go back to our position network, and we're gonna add a couple of
+ things, and
+ that's why it's really nice to add this dot, or not dot, this null, the act like a
+ period,
+ because now we can edit it again, and we are going to add noise.
+ So from the switch, drag that tab, and then hit noise, and then we see a bunch of
+ things
+ happening.
+ Once again, I can go into it in another video, but pretty much, whenever these
+ colors are
+ different, it means the geographical position of each particle is different.
+ So if we hook it up, we're gonna get something that does not look like a butterfly,
+ which
+ is good, and we control it, so undo that, and eventually we are going to add this
+ noise
+ back to our original position.
+ So think of it as we are adding distortion to our original position data.
+ So the first thing we are going to want to do is hit P, pull up the menu, output,
+ set
+ it to only noise, and then for these values, we can make it anything we want, so
+ please
+ experiment, but these are the ones that I used for the project.
+ Yeah, and then monochrome off, and then print the second one as well, and this
+ makes us
+ such that they're more like lines.
+ Great, so we can kind of see it's working, but how do we make it, if I hit 1, go,
+ you
+ know, no noise anymore, we're going to want to look at amplitude, so going back to
+ our
+ chop network, go to amp, make it active, drag it to amplitude, chop reference, and
+ great.
+ Now we see our particle equal 1, we'll see that the amplitude will change as well,
+ right,
+ so it's the first part of the chop setup, and when we release it, it will count the
+ position, so it will switch to a new position, while also the amplitude goes down.
+ So great, we hold, let go, it will change index and also get rid of this noise, so
+ now
+ we have a really clean morphing effect.
+ So now we are going to want to sort of change the perspective of the dragon, and we
+ can
+ do this by going to our point transform, much earlier on.
+ So going to go back to this, and then we can just click it so we can see in the
+ background.
+ And then one other thing is let's just select everything, or rather click render,
+ select
+ everything, go to common, and then we just want everything to look really clean, so
+ viewer
+ smoothness to nearest pixel, kind of helps out there, and then pixel format, this
+ just
+ kind of makes it like higher render or lower render, so make it 32 bit flow, great,
+ so
+ now we have a sort of like a wider color range, and that's great, so we do it again,
+ colors
+ are much more vibrant, and everything's a lot more crisp, and good.
+ So for this one, you know, we want to kind of like rotate it, right, so it's like,
+ this
+ one you can just kind of play around, so it's like 90, maybe like another 90, and
+ then
+ this one, I don't have like a perfect science to it, but honestly this one is
+ pretty cool.
+ And for the dragon, it's also pretty cool actually, maybe I should have just seen
+ this
+ instead, but you know, you get to just play around with alleys until you get
+ something
+ that you like, I'll see if I can get that, nice.
+ And then we are going to want to make it spin, so we want the box to have only the
+ lines,
+ so hit tab, material, and then go to wireframe, then drag it on, so now we have
+ lines, and
+ we can go to wireframe mode, topology, another way you can do it is tab, line, and
+ then drag
+ it on here, and this way you control things like how wide it is, how thin it is,
+ and a
+ lot more things, but wireframe is easy for now.
+ Okay, and then for the balls, we don't want there to be shading, at least for now,
+ so
+ we can use constant, drag it on, and then now they don't have any sort of
+ reflections,
+ and then I kind of want the box to be bigger, so we can go like 1.5, and the sphere
+ level
+ can give it smaller, so 0.03, nice, and then for the geo, we can make this a bit
+ smaller,
+ so like 0.8, and then, yeah, so now it's contained in the box, we hit 1, great, so
+ now our models
+ are inside this rotating box, and to add a background, we can do, answer operator,
+ transform,
+ and then set comp over back on color, and then the alpha to 1, and then right,
+ great.
+ Another way you can do this is like you do a constant, and then this will sort of
+ be
+ your background, to the resolution of your project, then use an over, make your
+ effect
+ over this background, and then connect it that way, and we can make this black,
+ great.
+ So yeah, now we have a morphing particle effect.
+ If you want to go more into the post-processing effects, the file will be in my
+ Patreon, which
+ is in the bio, but yeah, so a couple of nodes, and a little bit of chopped magic,
+ we have
+ created this really cool effect.
+ So you can do a lot of things too, so for example, if you want these particles to
+ move,
+ you can go to noise, trans, noise to 40, and then transform, like translate, 40,
+ abs time
+ dot second, so you can really exaggerate a number, but now it will move while that
+ happens.
+ Make it a bit more chill, nice, now it's moving really subtly, but yeah, so I hope
+ you enjoy
+ this tutorial, I hope it's the first of many, and please enjoy, thank you so much.

@@ -1,4 +1,0 @@
-# 로컬 HTTPS 인증서 — 비밀키이므로 절대 커밋하지 않음
-key.pem
-cert.pem
-node_modules/

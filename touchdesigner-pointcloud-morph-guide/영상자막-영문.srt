@@ -1,0 +1,1752 @@
+1
+00:00:00,000 --> 00:00:05,000
+ Hi everyone, today we'll be going over how I did this effect in Touch Designer
+
+2
+00:00:05,000 --> 00:00:06,240
+ using
+
+3
+00:00:06,240 --> 00:00:08,580
+ point clouds and tops.
+
+4
+00:00:08,580 --> 00:00:13,320
+ So here I used MediaPipe to control morphing, but for the sake of simplicity, we'll
+
+5
+00:00:13,320 --> 00:00:13,720
+ just
+
+6
+00:00:13,720 --> 00:00:15,480
+ use our keyboard.
+
+7
+00:00:15,480 --> 00:00:20,190
+ So if you hold down the one key on your keyboard and release, it will morph in the
+
+8
+00:00:20,190 --> 00:00:20,960
+ exact same
+
+9
+00:00:20,960 --> 00:00:22,800
+ way as the demo video.
+
+10
+00:00:22,800 --> 00:00:26,970
+ We'll also just use two, but you can use as many point clouds as you like and you
+
+11
+00:00:26,970 --> 00:00:27,280
+ can
+
+12
+00:00:27,280 --> 00:00:29,880
+ use whatever models you like as well.
+
+13
+00:00:29,880 --> 00:00:35,580
+ So for a quick overview of the project, we are going to learn how to create an instancing
+
+14
+00:00:35,580 --> 00:00:37,880
+ network using positions and color data.
+
+15
+00:00:37,880 --> 00:00:44,960
+ We're going to set up a little system to control the particles exploding and then
+
+16
+00:00:44,960 --> 00:00:45,260
+ morphing
+
+17
+00:00:45,260 --> 00:00:51,400
+ back into place smoothly, how to make a quick little cage for the particles, and
+
+18
+00:00:51,400 --> 00:00:52,400
+ some really
+
+19
+00:00:52,400 --> 00:00:54,960
+ simple post-processing to create this really cool effect.
+
+20
+00:00:54,960 --> 00:00:58,360
+ So without further ado, let's get started.
+
+21
+00:00:58,360 --> 00:01:04,860
+ Alright, so the first thing we're going to want to do is import our point cloud
+
+22
+00:01:04,860 --> 00:01:05,480
+ file.
+
+23
+00:01:05,480 --> 00:01:11,690
+ So hit tab, and then because we're using tops, select the point file in, and then
+
+24
+00:01:11,690 --> 00:01:12,320
+ this way
+
+25
+00:01:12,320 --> 00:01:15,060
+ you can add your point cloud file.
+
+26
+00:01:15,060 --> 00:01:20,500
+ It's important to note that if you hit red, green, and blue, you'll have these
+
+27
+00:01:20,500 --> 00:01:21,320
+ options,
+
+28
+00:01:21,320 --> 00:01:24,440
+ but not all point cloud files have that.
+
+29
+00:01:24,440 --> 00:01:30,090
+ The general gist is for red, green, and blue, it's probably going to be either XYZ,
+
+30
+00:01:30,090 --> 00:01:30,440
+ RGB,
+
+31
+00:01:30,440 --> 00:01:33,640
+ or red, green, blue.
+
+32
+00:01:33,640 --> 00:01:35,880
+ Select one of those for these.
+
+33
+00:01:35,880 --> 00:01:41,760
+ But for today, I'm just going to copy and paste mine in because I already have them.
+
+34
+00:01:41,760 --> 00:01:46,880
+ So yeah, these don't look like the models, but that's fine.
+
+35
+00:01:46,880 --> 00:01:53,000
+ The first thing we are going to need to figure out is the sort of number problem.
+
+36
+00:01:53,000 --> 00:01:58,850
+ What I mean by that is if you double click and then press info, you'll see that
+
+37
+00:01:58,850 --> 00:01:59,400
+ there
+
+38
+00:01:59,400 --> 00:02:01,840
+ are 403,225 pixels.
+
+39
+00:02:01,840 --> 00:02:10,160
+ For the second model, there are not that many, there are less.
+
+40
+00:02:10,160 --> 00:02:11,840
+ So why does this matter?
+
+41
+00:02:11,840 --> 00:02:19,040
+ So for instancing, we can think of it like particle number one has sort of its
+
+42
+00:02:19,040 --> 00:02:20,040
+ position
+
+43
+00:02:20,040 --> 00:02:22,280
+ data and eventually its color data.
+
+44
+00:02:22,280 --> 00:02:27,140
+ When we morph them, we need to give it an instruction of like, hey, particle one,
+
+45
+00:02:27,140 --> 00:02:27,680
+ instead
+
+46
+00:02:27,680 --> 00:02:33,340
+ of being here, I want to move you to some other location with some other color and
+
+47
+00:02:33,340 --> 00:02:33,940
+ that's
+
+48
+00:02:33,940 --> 00:02:34,940
+ fine.
+
+49
+00:02:34,940 --> 00:02:46,080
+ However, as soon as we get to particle 239,122, this doesn't exist.
+
+50
+00:02:46,080 --> 00:02:49,950
+ So this particle from the first model will try morphing into something that does
+
+51
+00:02:49,950 --> 00:02:51,720
+ not exist.
+
+52
+00:02:51,720 --> 00:02:54,200
+ And then you will not be able to do the effect.
+
+53
+00:02:54,200 --> 00:03:00,480
+ So the main problem we need to solve is how to make them the same size.
+
+54
+00:03:00,480 --> 00:03:05,030
+ This way, no matter what point cloud file you use, whether it's too big or too
+
+55
+00:03:05,030 --> 00:03:05,600
+ small,
+
+56
+00:03:05,600 --> 00:03:07,560
+ it will have the exact same amount of points.
+
+57
+00:03:07,560 --> 00:03:11,320
+ And we can then do this effect for however many clouds we want.
+
+58
+00:03:11,320 --> 00:03:15,680
+ So let's first start with handling the position data.
+
+59
+00:03:15,680 --> 00:03:20,640
+ So first, we are going to want to add a point transform.
+
+60
+00:03:20,640 --> 00:03:25,480
+ This will allow us to, for example, change the scale of all the points later on.
+
+61
+00:03:25,480 --> 00:03:29,880
+ This is important now, but we'll get back into it in a bit.
+
+62
+00:03:29,880 --> 00:03:37,000
+ So one way we can solve the number issue is using two fit tops.
+
+63
+00:03:37,000 --> 00:03:44,290
+ So if we drag and then hit tab and then fit, what we can do is go to common and we
+
+64
+00:03:44,290 --> 00:03:44,760
+ can
+
+65
+00:03:44,760 --> 00:03:48,640
+ set the output resolution to two times.
+
+66
+00:03:48,640 --> 00:03:53,440
+ What this does is it increases the resolution by two times.
+
+67
+00:03:53,440 --> 00:03:56,820
+ But what's important is that if you double click, you'll see that there are now
+
+68
+00:03:56,820 --> 00:03:57,160
+ over
+
+69
+00:03:57,160 --> 00:04:01,520
+ a million particles, way over a million.
+
+70
+00:04:01,520 --> 00:04:05,760
+ So we have a lot of particles.
+
+71
+00:04:05,760 --> 00:04:12,450
+ But if we go to fit again and we hit common, we can then do output resolution to
+
+72
+00:04:12,450 --> 00:04:13,040
+ limit
+
+73
+00:04:13,040 --> 00:04:20,090
+ resolution and then I like using 800 by 800, but you might need to do less if your
+
+74
+00:04:20,090 --> 00:04:20,920
+ computer
+
+75
+00:04:20,920 --> 00:04:24,840
+ can't handle it and you can do more if your computer can't.
+
+76
+00:04:24,840 --> 00:04:30,880
+ By doing this now we have 640,000.
+
+77
+00:04:30,880 --> 00:04:36,010
+ So this might not seem important, but now if we copy and paste all these, then do
+
+78
+00:04:36,010 --> 00:04:36,400
+ like
+
+79
+00:04:36,400 --> 00:04:45,800
+ copy, paste and make our second point cloud the input, if we look at the fit 4, it
+
+80
+00:04:45,800 --> 00:04:46,440
+ also
+
+81
+00:04:46,440 --> 00:04:49,240
+ has 640,000.
+
+82
+00:04:49,240 --> 00:04:55,530
+ So this way sort of standardizes how many points there are, so they are all
+
+83
+00:04:55,530 --> 00:04:56,800
+ consistent.
+
+84
+00:04:56,800 --> 00:04:58,080
+ So that's great.
+
+85
+00:04:58,080 --> 00:05:03,270
+ So the last thing we want to do is for fit 1, for input smoothness and viewer
+
+86
+00:05:03,270 --> 00:05:04,520
+ smoothness,
+
+87
+00:05:04,520 --> 00:05:09,960
+ to nearest pixel, and we want to do the same for the other fit.
+
+88
+00:05:09,960 --> 00:05:16,520
+ And then we want to do it for these two as well.
+
+89
+00:05:16,520 --> 00:05:21,410
+ And that just helps with the particles looking really crisp later on when we render
+
+90
+00:05:21,410 --> 00:05:21,860
+ it.
+
+91
+00:05:21,860 --> 00:05:29,080
+ So now we have all of our position data sorted out, so now let's handle color.
+
+92
+00:05:29,080 --> 00:05:33,770
+ So what we are going to want to do is hit tab and then do point file select and
+
+93
+00:05:33,770 --> 00:05:34,240
+ drag
+
+94
+00:05:34,240 --> 00:05:37,200
+ our point cloud right over it.
+
+95
+00:05:37,200 --> 00:05:43,200
+ So now it's referencing it, you can see it.
+
+96
+00:05:43,200 --> 00:05:52,280
+ And then same thing, click and do red, green and blue.
+
+97
+00:05:52,280 --> 00:05:53,280
+ Great.
+
+98
+00:05:53,280 --> 00:05:57,800
+ So now something is going on, they're different.
+
+99
+00:05:57,800 --> 00:06:03,530
+ So we need to make this into color, and the way you do that is attach a map and
+
+100
+00:06:03,530 --> 00:06:04,320
+ then you
+
+101
+00:06:04,320 --> 00:06:09,320
+ divide by 127.
+
+102
+00:06:09,320 --> 00:06:12,400
+ And then we do it correctly, it should be red.
+
+103
+00:06:12,400 --> 00:06:14,040
+ There you go.
+
+104
+00:06:14,040 --> 00:06:20,890
+ And I can explain why this is in another video, but it has something to do with how
+
+105
+00:06:20,890 --> 00:06:21,480
+ color
+
+106
+00:06:21,480 --> 00:06:25,800
+ values are sorted, and they're not between values 0 and 1.
+
+107
+00:06:25,800 --> 00:06:32,640
+ So we can do the same thing with the fit trick, select both of these, Command C,
+
+108
+00:06:32,640 --> 00:06:33,560
+ Command V,
+
+109
+00:06:33,560 --> 00:06:44,120
+ or copy and paste, and then we should see 640,000 pixels, and that we do.
+
+110
+00:06:44,120 --> 00:06:51,200
+ So we do the same thing, so just copy and paste this entire network, and then drag
+
+111
+00:06:51,200 --> 00:06:51,680
+ your
+
+112
+00:06:51,680 --> 00:06:54,860
+ second point cloud to it, and then great.
+
+113
+00:06:54,860 --> 00:07:01,160
+ Once again we should see 640,000, and that we do.
+
+114
+00:07:01,160 --> 00:07:07,740
+ So now we can set up for our switch system.
+
+115
+00:07:07,740 --> 00:07:17,090
+ So go to switch, and tops, and then we need to connect the position nodes to switch,
+
+116
+00:07:17,090 --> 00:07:17,600
+ and
+
+117
+00:07:17,600 --> 00:07:20,040
+ then do one again for color.
+
+118
+00:07:20,040 --> 00:07:25,250
+ So what you can do, if you're really organized, is say for example like position,
+
+119
+00:07:25,250 --> 00:07:25,920
+ dragon,
+
+120
+00:07:25,920 --> 00:07:38,240
+ and then color, dragon, and then similarly position, butterfly, color, butterfly.
+
+121
+00:07:38,240 --> 00:07:43,000
+ And these naming conventions are completely arbitrary.
+
+122
+00:07:43,000 --> 00:07:44,840
+ They can be whatever you want.
+
+123
+00:07:44,840 --> 00:07:51,440
+ So when people tell you to type POS, COL, it's nothing to do with syntax, at least
+
+124
+00:07:51,440 --> 00:07:53,120
+ for now.
+
+125
+00:07:53,120 --> 00:07:57,740
+ It's just for your own discretion, whatever helps you understand it.
+
+126
+00:07:57,740 --> 00:08:03,950
+ So if you wanted to, you could say for example, I don't know, position, drag, that
+
+127
+00:08:03,950 --> 00:08:05,760
+ works too.
+
+128
+00:08:05,760 --> 00:08:08,240
+ But this is just a really simple way of doing it.
+
+129
+00:08:08,240 --> 00:08:14,850
+ So now we are going to want to attach both of our position nodes to switch with our
+
+130
+00:08:14,850 --> 00:08:15,440
+ color
+
+131
+00:08:15,440 --> 00:08:18,920
+ nodes into the other switch.
+
+132
+00:08:18,920 --> 00:08:24,760
+ So now we can see in the switch one if we press P, that we have two inputs, one for
+
+133
+00:08:24,760 --> 00:08:29,400
+ the dragon, one for the butterfly, and for color, same thing.
+
+134
+00:08:29,400 --> 00:08:35,200
+ Important for both of them, we want to blend between inputs.
+
+135
+00:08:35,200 --> 00:08:42,090
+ This is because, for example, if you have values between 0 and 1, let's say you
+
+136
+00:08:42,090 --> 00:08:42,640
+ want
+
+137
+00:08:42,640 --> 00:08:47,030
+ to morph something halfway between the dragon and the butterfly, if you blend
+
+138
+00:08:47,030 --> 00:08:48,000
+ between inputs,
+
+139
+00:08:48,000 --> 00:08:52,560
+ it will allow you to have a sort of blend, and that's what gives you that really
+
+140
+00:08:52,560 --> 00:08:53,040
+ clean
+
+141
+00:08:53,040 --> 00:08:56,440
+ morphing effect where everything switches at the same time.
+
+142
+00:08:56,440 --> 00:08:57,440
+ Great.
+
+143
+00:08:57,440 --> 00:09:04,520
+ And then we can sort of really neatly tie this up by adding a null.
+
+144
+00:09:04,520 --> 00:09:09,170
+ When I first used Tush Designer, I didn't really understand why people use nulls,
+
+145
+00:09:09,170 --> 00:09:09,480
+ but
+
+146
+00:09:09,480 --> 00:09:15,680
+ an analogy is that you can treat them like periods in sentences.
+
+147
+00:09:15,680 --> 00:09:21,670
+ So when you write an essay, you don't have to use periods, but it allows you to
+
+148
+00:09:21,670 --> 00:09:22,440
+ discern
+
+149
+00:09:22,440 --> 00:09:26,760
+ when you finish an idea and when you're starting the next one, and that's what we're
+
+150
+00:09:26,760 --> 00:09:27,180
+ doing.
+
+151
+00:09:27,180 --> 00:09:32,670
+ We have finished creating our system for position data and color data, so we add a
+
+152
+00:09:32,670 --> 00:09:33,360
+ null.
+
+153
+00:09:33,360 --> 00:09:37,320
+ And we can name it position data and color.
+
+154
+00:09:37,320 --> 00:09:42,760
+ So that way, if we make edits in our sentence or our thoughts, then it will remain
+
+155
+00:09:42,760 --> 00:09:43,680
+ on effect,
+
+156
+00:09:43,680 --> 00:09:46,240
+ but at least we know that's where it ends.
+
+157
+00:09:46,240 --> 00:09:48,960
+ So we'll come back to this in a bit.
+
+158
+00:09:48,960 --> 00:09:54,090
+ But just so we can sort of see what's going on, we can start setting up a really
+
+159
+00:09:54,090 --> 00:09:54,600
+ simple
+
+160
+00:09:54,600 --> 00:09:56,100
+ render setup.
+
+161
+00:09:56,100 --> 00:10:02,880
+ So fit a tab, go to comp, geometry, then we see this torus.
+
+162
+00:10:02,880 --> 00:10:03,880
+ Let's get rid of that.
+
+163
+00:10:03,880 --> 00:10:11,610
+ So double click, delete that, hit tab, go to solve, then add, and then P, and then
+
+164
+00:10:11,610 --> 00:10:12,120
+ add
+
+165
+00:10:12,120 --> 00:10:13,680
+ points.
+
+166
+00:10:13,680 --> 00:10:18,880
+ So this will make it such that when we instance, we can add points, and then we
+
+167
+00:10:18,880 --> 00:10:20,000
+ need to convert
+
+168
+00:10:20,000 --> 00:10:21,000
+ that.
+
+169
+00:10:21,000 --> 00:10:32,600
+ Convert, and then it should be from type, convert to particles per point, and then
+
+170
+00:10:32,600 --> 00:10:32,860
+ particles
+
+171
+00:10:32,860 --> 00:10:35,160
+ type render as point sprites.
+
+172
+00:10:35,160 --> 00:10:40,720
+ And then we want to see it in both the render and the geo comp.
+
+173
+00:10:40,720 --> 00:10:45,360
+ So purple render, blue for display.
+
+174
+00:10:45,360 --> 00:10:46,360
+ Great.
+
+175
+00:10:46,360 --> 00:10:50,200
+ So it looks like nothing has happened, which is expected.
+
+176
+00:10:50,200 --> 00:10:58,240
+ So now let's add a camera, go to comp, then camera, light, then a render.
+
+177
+00:10:58,240 --> 00:11:05,680
+ So then go to top, render, and we still see nothing, which is expected.
+
+178
+00:11:05,680 --> 00:11:12,400
+ So now we are going to want to instance our lovely data that we prepared.
+
+179
+00:11:12,400 --> 00:11:18,380
+ So one way we can think of instancing is that, believe it or not, each pixel on
+
+180
+00:11:18,380 --> 00:11:19,440
+ their color
+
+181
+00:11:19,440 --> 00:11:25,840
+ represents a coordinate in this sort of three dimensional space.
+
+182
+00:11:25,840 --> 00:11:31,800
+ I will get to that in another video, but each pixel has its own coordinate and
+
+183
+00:11:31,800 --> 00:11:33,040
+ geographical
+
+184
+00:11:33,040 --> 00:11:36,440
+ position baked into it through the color.
+
+185
+00:11:36,440 --> 00:11:38,120
+ Same thing for the actual color.
+
+186
+00:11:38,120 --> 00:11:40,800
+ So this is the actual color that I will show.
+
+187
+00:11:40,800 --> 00:11:45,930
+ Instead of me manually telling TouchSiner, hey, I want you to put particle two at
+
+188
+00:11:45,930 --> 00:11:46,320
+ this
+
+189
+00:11:46,320 --> 00:11:53,360
+ XYZ coordinate, we can just reference this and reference this really simply.
+
+190
+00:11:53,360 --> 00:11:59,040
+ So we can do so by going to geo one, go to instance, turn instancing on, and then
+
+191
+00:11:59,040 --> 00:11:59,900
+ translate
+
+192
+00:11:59,900 --> 00:12:04,720
+ off is sort of like the X, Y, and Z position, so sort of like your coordinates.
+
+193
+00:12:04,720 --> 00:12:09,470
+ So we are going to want to take our position top, drag it into translate off, then
+
+194
+00:12:09,470 --> 00:12:10,200
+ translate
+
+195
+00:12:10,200 --> 00:12:19,910
+ XYZ, R, G, B. Now we can see we have something, and I guess it turns out while I
+
+196
+00:12:19,910 --> 00:12:20,600
+ was making
+
+197
+00:12:20,600 --> 00:12:27,120
+ these models, I didn't take away the bug one, so you can enjoy two, but at least we
+
+198
+00:12:27,120 --> 00:12:27,240
+ can
+
+199
+00:12:27,240 --> 00:12:29,280
+ see our dragon.
+
+200
+00:12:29,280 --> 00:12:30,480
+ Great.
+
+201
+00:12:30,480 --> 00:12:36,120
+ And then to add color, we go to the second tab, instance two, go to the color mode,
+
+202
+00:12:36,120 --> 00:12:36,480
+ and
+
+203
+00:12:36,480 --> 00:12:45,030
+ drag the color top, and once again, R, G, and B. And we can see we have a red
+
+204
+00:12:45,030 --> 00:12:46,000
+ dragon.
+
+205
+00:12:46,000 --> 00:12:47,000
+ Cool.
+
+206
+00:12:47,000 --> 00:12:54,990
+ So now we can adjust the sizes of these points using material, so hit tab, go to
+
+207
+00:12:54,990 --> 00:12:56,240
+ that, and
+
+208
+00:12:56,240 --> 00:13:03,130
+ then point sprite, and then drag it onto the geo, select the material, and then
+
+209
+00:13:03,130 --> 00:13:04,080
+ great.
+
+210
+00:13:04,080 --> 00:13:09,260
+ So if you go to point sprite, change the size of these particles, we can change it
+
+211
+00:13:09,260 --> 00:13:10,120
+ here.
+
+212
+00:13:10,120 --> 00:13:16,480
+ So you want it bigger, obviously drag it up, you want it smaller, you just drag it
+
+213
+00:13:16,480 --> 00:13:17,240
+ down.
+
+214
+00:13:17,240 --> 00:13:18,240
+ And great.
+
+215
+00:13:18,240 --> 00:13:23,520
+ I think it's 0.7, looks pretty cool, so it gives that, you know what it is, but
+
+216
+00:13:23,520 --> 00:13:23,960
+ when
+
+217
+00:13:23,960 --> 00:13:26,560
+ it morphs, it's pretty obvious.
+
+218
+00:13:26,560 --> 00:13:27,560
+ So great.
+
+219
+00:13:27,560 --> 00:13:29,960
+ Now we have that.
+
+220
+00:13:29,960 --> 00:13:35,560
+ So we now need to switch between each one really cleanly.
+
+221
+00:13:35,560 --> 00:13:42,650
+ So now we will create our chop setup so we can do things like switch between them,
+
+222
+00:13:42,650 --> 00:13:43,480
+ explode
+
+223
+00:13:43,480 --> 00:13:44,960
+ the particles, and all that.
+
+224
+00:13:44,960 --> 00:13:48,000
+ So here's how we do it.
+
+225
+00:13:48,000 --> 00:13:53,040
+ So the first thing we're going to want to do is use chops.
+
+226
+00:13:53,040 --> 00:13:59,600
+ So go to tab, chop, and then keyboard in.
+
+227
+00:13:59,600 --> 00:14:07,610
+ So for keyboard in, if we select it to 1, if we hit the number 1 key, let go, it
+
+228
+00:14:07,610 --> 00:14:08,680
+ works.
+
+229
+00:14:08,680 --> 00:14:11,760
+ We can set this to any number, so 5 as well, it works.
+
+230
+00:14:11,760 --> 00:14:17,520
+ You can even set it to letters, but for this video, let's just stick to 1.
+
+231
+00:14:17,520 --> 00:14:24,040
+ So when it's morphing, there are a couple of things going on.
+
+232
+00:14:24,040 --> 00:14:32,440
+ So first, the particles explode while still being a dragon, or the first model.
+
+233
+00:14:32,440 --> 00:14:39,760
+ After you release the keyboard, it will switch all the coordinates, get rid of the
+
+234
+00:14:39,760 --> 00:14:41,000
+ explosion,
+
+235
+00:14:41,000 --> 00:14:45,540
+ and then it will morph into the second model.
+
+236
+00:14:45,540 --> 00:14:51,400
+ So we need to sort of account for that delay, or sort of those chain of events.
+
+237
+00:14:51,400 --> 00:14:57,040
+ So the first thing we'll do is set it so that when we hit 1, we have some number
+
+238
+00:14:57,040 --> 00:14:58,060
+ that will
+
+239
+00:14:58,060 --> 00:15:01,200
+ act as how much the particles explode.
+
+240
+00:15:01,200 --> 00:15:06,240
+ So to do that, we can first use a math.
+
+241
+00:15:06,240 --> 00:15:12,780
+ So math, put a range, and then we can set the from range and the to range, two
+
+242
+00:15:12,780 --> 00:15:13,480
+ values
+
+243
+00:15:13,480 --> 00:15:15,240
+ we want to use.
+
+244
+00:15:15,240 --> 00:15:22,560
+ So what this does is, for the from range, it says, okay, from my input, this is the
+
+245
+00:15:22,560 --> 00:15:29,800
+ range of values, and I want to scale those values to this new range, so if we hit 1,
+
+246
+00:15:29,800 --> 00:15:36,800
+ the new max instead of 1 should be, now the max is 0.87, so if we hit 1, we have
+
+247
+00:15:36,800 --> 00:15:37,560
+ that.
+
+248
+00:15:37,560 --> 00:15:45,850
+ And what I mean by scale down is, for example, this part, you don't have to follow,
+
+249
+00:15:45,850 --> 00:15:46,320
+ but let's
+
+250
+00:15:46,320 --> 00:15:47,320
+ say we have it, right?
+
+251
+00:15:47,320 --> 00:15:51,720
+ So now when we click it, we get the value 0.5.
+
+252
+00:15:51,720 --> 00:15:58,160
+ Instead of the value being half of 1, it should now be half of 0.37, and if we hit
+
+253
+00:15:58,160 --> 00:15:58,960
+ 1, we can
+
+254
+00:15:58,960 --> 00:15:59,960
+ see that work.
+
+255
+00:15:59,960 --> 00:16:04,200
+ So that's what I mean by it's scale of the value down.
+
+256
+00:16:04,200 --> 00:16:05,200
+ Great.
+
+257
+00:16:05,200 --> 00:16:10,600
+ So instead of just it being like, okay, I hold the keyboard, it's immediately that
+
+258
+00:16:10,600 --> 00:16:11,120
+ value,
+
+259
+00:16:11,120 --> 00:16:14,960
+ we want a sort of gradient, so it happens smoothly.
+
+260
+00:16:14,960 --> 00:16:19,580
+ So what we can do is use lag, and if you want smoother animations for anything,
+
+261
+00:16:19,580 --> 00:16:20,040
+ this is
+
+262
+00:16:20,040 --> 00:16:22,240
+ your go-to.
+
+263
+00:16:22,240 --> 00:16:28,340
+ So now if we hold 1, value changes really smoothly.
+
+264
+00:16:28,340 --> 00:16:32,440
+ So we'll see here that now there are also two values, so what do they mean?
+
+265
+00:16:32,440 --> 00:16:36,800
+ The first one means the lag, or how long it takes to get to the value, where values
+
+266
+00:16:36,800 --> 00:16:37,840
+ increase,
+
+267
+00:16:37,840 --> 00:16:40,680
+ and the second one for when it decreases.
+
+268
+00:16:40,680 --> 00:16:46,740
+ So to make this really exaggerated, let's set this to 5 and 1, and 0.1.
+
+269
+00:16:46,740 --> 00:16:56,060
+ So what this means is that it will take five seconds for it going from 0 to 0.37,
+
+270
+00:16:56,060 --> 00:16:56,760
+ and to
+
+271
+00:16:56,760 --> 00:16:58,960
+ go back down to 0, it's super quick.
+
+272
+00:16:58,960 --> 00:17:03,480
+ So if I hold 1, it will take a while to get to the max value, and when I let go, it's
+
+273
+00:17:03,480 --> 00:17:04,480
+ really quick.
+
+274
+00:17:04,480 --> 00:17:05,480
+ So hold 1.
+
+275
+00:17:05,480 --> 00:17:09,720
+ As you can see, it's taking its sweet time getting to 0.37, but if we let go, it's
+
+276
+00:17:09,720 --> 00:17:09,880
+ gone
+
+277
+00:17:09,880 --> 00:17:10,880
+ immediately.
+
+278
+00:17:10,880 --> 00:17:15,170
+ So it's subtle, but it's important, because for the animation visual, you want a
+
+279
+00:17:15,170 --> 00:17:15,680
+ really
+
+280
+00:17:15,680 --> 00:17:20,080
+ slow expansion, but a really quick morph.
+
+281
+00:17:20,080 --> 00:17:28,360
+ So what we can do is play around with it, but I liked 0.7 and 0.2.
+
+282
+00:17:28,360 --> 00:17:38,760
+ So once again, we can add a period to our plot, and add a null.
+
+283
+00:17:38,760 --> 00:17:42,550
+ So now we know that this is the amplitude, and once again, this is a generic naming
+
+284
+00:17:42,550 --> 00:17:43,360
+ convention.
+
+285
+00:17:43,360 --> 00:17:48,450
+ You can name this whatever you want, you can leave it at null 1, but this just
+
+286
+00:17:48,450 --> 00:17:49,120
+ makes it
+
+287
+00:17:49,120 --> 00:17:53,040
+ such that we know, okay, this value is for the amplitude.
+
+288
+00:17:53,040 --> 00:17:54,040
+ Great.
+
+289
+00:17:54,040 --> 00:17:56,840
+ The second thing we need to do is now add a count.
+
+290
+00:17:56,840 --> 00:18:03,130
+ So we need to know that when you let go of it, it will start morphing into the next
+
+291
+00:18:03,130 --> 00:18:03,560
+ and
+
+292
+00:18:03,560 --> 00:18:05,560
+ blend into the second input.
+
+293
+00:18:05,560 --> 00:18:12,800
+ So we need a way to figure out, as this value decreases, it will count up 1.
+
+294
+00:18:12,800 --> 00:18:23,720
+ So first we do a lag for really smooth values, once again, 0.5 to 0.2, and to do
+
+295
+00:18:23,720 --> 00:18:24,880
+ the count
+
+296
+00:18:24,880 --> 00:18:29,200
+ part we use a count chop, so count.
+
+297
+00:18:29,200 --> 00:18:39,040
+ And then we need it to trigger on decreasing values, so set to 0.7.
+
+298
+00:18:39,040 --> 00:18:44,970
+ So this means that when the value goes from 1 to 0, right, decreasing values, when
+
+299
+00:18:44,970 --> 00:18:45,240
+ it
+
+300
+00:18:45,240 --> 00:18:53,160
+ gets below 0.7, it will count up, so if we hit 1 and we release, it counts to 1.
+
+301
+00:18:53,160 --> 00:18:54,160
+ Great.
+
+302
+00:18:54,160 --> 00:19:00,000
+ Now, we only have two inputs, so what happens if we do it again?
+
+303
+00:19:00,000 --> 00:19:04,240
+ We are at 0, 1, and 2, so that's not good.
+
+304
+00:19:04,240 --> 00:19:09,960
+ So we need to clamp these values, so go to count, limit, loop min and max, and then
+
+305
+00:19:09,960 --> 00:19:10,240
+ we
+
+306
+00:19:10,240 --> 00:19:14,080
+ can do it to 1, and then reset them.
+
+307
+00:19:14,080 --> 00:19:21,520
+ So now, if we hold 1, release, do it again, it will go back to the first input, 0.
+
+308
+00:19:21,520 --> 00:19:25,590
+ And we just change this value for however many point clouds we have, so if we have
+
+309
+00:19:25,590 --> 00:19:26,000
+ three
+
+310
+00:19:26,000 --> 00:19:33,270
+ point clouds, so if we have three point clouds, it will be 2, so it will go from
+
+311
+00:19:33,270 --> 00:19:34,320
+ the first
+
+312
+00:19:34,320 --> 00:19:39,880
+ input, the second input, the third input, back to the first input.
+
+313
+00:19:39,880 --> 00:19:40,880
+ Great.
+
+314
+00:19:40,880 --> 00:19:44,760
+ And then, once again, just to make it a little smoother, we add another lag, we add
+
+315
+00:19:44,760 --> 00:19:45,120
+ these
+
+316
+00:19:45,120 --> 00:19:48,600
+ values, and then we add a null.
+
+317
+00:19:48,600 --> 00:19:53,080
+ And then what we can do is, we can name this one index, but once again, these can
+
+318
+00:19:53,080 --> 00:19:53,680
+ be named
+
+319
+00:19:53,680 --> 00:19:59,340
+ whatever you want, or however it best helps you keep track and understand what
+
+320
+00:19:59,340 --> 00:20:00,280
+ everything
+
+321
+00:20:00,280 --> 00:20:01,280
+ is doing.
+
+322
+00:20:01,280 --> 00:20:08,200
+ So now, if we wire them up, so go back to the switch, for index, you click on this
+
+323
+00:20:08,200 --> 00:20:08,400
+ little
+
+324
+00:20:08,400 --> 00:20:14,180
+ star icon, then drag it into index, you'll see it turns blue and there's an arrow
+
+325
+00:20:14,180 --> 00:20:14,720
+ which
+
+326
+00:20:14,720 --> 00:20:21,160
+ means it's being referenced, then similarly we drag it, great.
+
+327
+00:20:21,160 --> 00:20:28,610
+ So now, if we hold 1, it should switch really cleanly, once we're back down, it
+
+328
+00:20:28,610 --> 00:20:30,240
+ does, great.
+
+329
+00:20:30,240 --> 00:20:36,960
+ So now we need the particles to explode, so here's how we do that.
+
+330
+00:20:36,960 --> 00:20:42,570
+ So we're gonna go back to our position network, and we're gonna add a couple of
+
+331
+00:20:42,570 --> 00:20:43,720
+ things, and
+
+332
+00:20:43,720 --> 00:20:49,230
+ that's why it's really nice to add this dot, or not dot, this null, the act like a
+
+333
+00:20:49,230 --> 00:20:50,040
+ period,
+
+334
+00:20:50,040 --> 00:20:55,840
+ because now we can edit it again, and we are going to add noise.
+
+335
+00:20:55,840 --> 00:21:01,880
+ So from the switch, drag that tab, and then hit noise, and then we see a bunch of
+
+336
+00:21:01,880 --> 00:21:02,560
+ things
+
+337
+00:21:02,560 --> 00:21:03,560
+ happening.
+
+338
+00:21:03,560 --> 00:21:09,590
+ Once again, I can go into it in another video, but pretty much, whenever these
+
+339
+00:21:09,590 --> 00:21:10,440
+ colors are
+
+340
+00:21:10,440 --> 00:21:15,680
+ different, it means the geographical position of each particle is different.
+
+341
+00:21:15,680 --> 00:21:21,530
+ So if we hook it up, we're gonna get something that does not look like a butterfly,
+
+342
+00:21:21,530 --> 00:21:22,040
+ which
+
+343
+00:21:22,040 --> 00:21:29,650
+ is good, and we control it, so undo that, and eventually we are going to add this
+
+344
+00:21:29,650 --> 00:21:30,360
+ noise
+
+345
+00:21:30,360 --> 00:21:34,560
+ back to our original position.
+
+346
+00:21:34,560 --> 00:21:40,600
+ So think of it as we are adding distortion to our original position data.
+
+347
+00:21:40,600 --> 00:21:45,660
+ So the first thing we are going to want to do is hit P, pull up the menu, output,
+
+348
+00:21:45,660 --> 00:21:46,080
+ set
+
+349
+00:21:46,080 --> 00:21:53,060
+ it to only noise, and then for these values, we can make it anything we want, so
+
+350
+00:21:53,060 --> 00:21:53,760
+ please
+
+351
+00:21:53,760 --> 00:22:00,560
+ experiment, but these are the ones that I used for the project.
+
+352
+00:22:00,560 --> 00:22:06,970
+ Yeah, and then monochrome off, and then print the second one as well, and this
+
+353
+00:22:06,970 --> 00:22:07,720
+ makes us
+
+354
+00:22:07,720 --> 00:22:10,280
+ such that they're more like lines.
+
+355
+00:22:10,280 --> 00:22:18,470
+ Great, so we can kind of see it's working, but how do we make it, if I hit 1, go,
+
+356
+00:22:18,470 --> 00:22:18,920
+ you
+
+357
+00:22:18,920 --> 00:22:26,750
+ know, no noise anymore, we're going to want to look at amplitude, so going back to
+
+358
+00:22:26,750 --> 00:22:27,240
+ our
+
+359
+00:22:27,240 --> 00:22:34,840
+ chop network, go to amp, make it active, drag it to amplitude, chop reference, and
+
+360
+00:22:34,840 --> 00:22:36,040
+ great.
+
+361
+00:22:36,040 --> 00:22:41,720
+ Now we see our particle equal 1, we'll see that the amplitude will change as well,
+
+362
+00:22:41,720 --> 00:22:42,360
+ right,
+
+363
+00:22:42,360 --> 00:22:50,640
+ so it's the first part of the chop setup, and when we release it, it will count the
+
+364
+00:22:50,640 --> 00:22:57,520
+ position, so it will switch to a new position, while also the amplitude goes down.
+
+365
+00:22:57,520 --> 00:23:07,720
+ So great, we hold, let go, it will change index and also get rid of this noise, so
+
+366
+00:23:07,720 --> 00:23:07,760
+ now
+
+367
+00:23:07,760 --> 00:23:11,440
+ we have a really clean morphing effect.
+
+368
+00:23:11,440 --> 00:23:18,430
+ So now we are going to want to sort of change the perspective of the dragon, and we
+
+369
+00:23:18,430 --> 00:23:18,800
+ can
+
+370
+00:23:18,800 --> 00:23:25,840
+ do this by going to our point transform, much earlier on.
+
+371
+00:23:25,840 --> 00:23:32,340
+ So going to go back to this, and then we can just click it so we can see in the
+
+372
+00:23:32,340 --> 00:23:33,960
+ background.
+
+373
+00:23:33,960 --> 00:23:39,220
+ And then one other thing is let's just select everything, or rather click render,
+
+374
+00:23:39,220 --> 00:23:39,760
+ select
+
+375
+00:23:39,760 --> 00:23:44,270
+ everything, go to common, and then we just want everything to look really clean, so
+
+376
+00:23:44,270 --> 00:23:44,800
+ viewer
+
+377
+00:23:44,800 --> 00:23:50,870
+ smoothness to nearest pixel, kind of helps out there, and then pixel format, this
+
+378
+00:23:50,870 --> 00:23:51,300
+ just
+
+379
+00:23:51,300 --> 00:23:56,480
+ kind of makes it like higher render or lower render, so make it 32 bit flow, great,
+
+380
+00:23:56,480 --> 00:23:56,720
+ so
+
+381
+00:23:56,720 --> 00:24:02,120
+ now we have a sort of like a wider color range, and that's great, so we do it again,
+
+382
+00:24:02,120 --> 00:24:02,720
+ colors
+
+383
+00:24:02,720 --> 00:24:07,920
+ are much more vibrant, and everything's a lot more crisp, and good.
+
+384
+00:24:07,920 --> 00:24:12,580
+ So for this one, you know, we want to kind of like rotate it, right, so it's like,
+
+385
+00:24:12,580 --> 00:24:13,040
+ this
+
+386
+00:24:13,040 --> 00:24:22,520
+ one you can just kind of play around, so it's like 90, maybe like another 90, and
+
+387
+00:24:22,520 --> 00:24:22,700
+ then
+
+388
+00:24:22,700 --> 00:24:26,840
+ this one, I don't have like a perfect science to it, but honestly this one is
+
+389
+00:24:26,840 --> 00:24:27,760
+ pretty cool.
+
+390
+00:24:27,760 --> 00:24:45,230
+ And for the dragon, it's also pretty cool actually, maybe I should have just seen
+
+391
+00:24:45,230 --> 00:24:45,520
+ this
+
+392
+00:24:45,520 --> 00:24:51,000
+ instead, but you know, you get to just play around with alleys until you get
+
+393
+00:24:51,000 --> 00:24:51,840
+ something
+
+394
+00:24:51,840 --> 00:25:00,880
+ that you like, I'll see if I can get that, nice.
+
+395
+00:25:00,880 --> 00:25:07,410
+ And then we are going to want to make it spin, so we want the box to have only the
+
+396
+00:25:07,410 --> 00:25:08,240
+ lines,
+
+397
+00:25:08,240 --> 00:25:14,050
+ so hit tab, material, and then go to wireframe, then drag it on, so now we have
+
+398
+00:25:14,050 --> 00:25:15,120
+ lines, and
+
+399
+00:25:15,120 --> 00:25:21,730
+ we can go to wireframe mode, topology, another way you can do it is tab, line, and
+
+400
+00:25:21,730 --> 00:25:22,600
+ then drag
+
+401
+00:25:22,600 --> 00:25:27,880
+ it on here, and this way you control things like how wide it is, how thin it is,
+
+402
+00:25:27,880 --> 00:25:28,240
+ and a
+
+403
+00:25:28,240 --> 00:25:32,160
+ lot more things, but wireframe is easy for now.
+
+404
+00:25:32,160 --> 00:25:37,940
+ Okay, and then for the balls, we don't want there to be shading, at least for now,
+
+405
+00:25:37,940 --> 00:25:38,240
+ so
+
+406
+00:25:38,240 --> 00:25:42,410
+ we can use constant, drag it on, and then now they don't have any sort of
+
+407
+00:25:42,410 --> 00:25:43,360
+ reflections,
+
+408
+00:25:43,360 --> 00:25:50,580
+ and then I kind of want the box to be bigger, so we can go like 1.5, and the sphere
+
+409
+00:25:50,580 --> 00:25:51,200
+ level
+
+410
+00:25:51,200 --> 00:25:57,520
+ can give it smaller, so 0.03, nice, and then for the geo, we can make this a bit
+
+411
+00:25:57,520 --> 00:25:58,480
+ smaller,
+
+412
+00:25:58,480 --> 00:26:05,840
+ so like 0.8, and then, yeah, so now it's contained in the box, we hit 1, great, so
+
+413
+00:26:05,840 --> 00:26:06,680
+ now our models
+
+414
+00:26:06,680 --> 00:26:14,770
+ are inside this rotating box, and to add a background, we can do, answer operator,
+
+415
+00:26:14,770 --> 00:26:16,240
+ transform,
+
+416
+00:26:16,240 --> 00:26:25,120
+ and then set comp over back on color, and then the alpha to 1, and then right,
+
+417
+00:26:25,120 --> 00:26:27,440
+ great.
+
+418
+00:26:27,440 --> 00:26:35,240
+ Another way you can do this is like you do a constant, and then this will sort of
+
+419
+00:26:35,240 --> 00:26:35,520
+ be
+
+420
+00:26:35,520 --> 00:26:43,220
+ your background, to the resolution of your project, then use an over, make your
+
+421
+00:26:43,220 --> 00:26:43,960
+ effect
+
+422
+00:26:43,960 --> 00:26:51,080
+ over this background, and then connect it that way, and we can make this black,
+
+423
+00:26:51,080 --> 00:26:52,000
+ great.
+
+424
+00:26:52,000 --> 00:26:57,200
+ So yeah, now we have a morphing particle effect.
+
+425
+00:26:57,200 --> 00:27:03,190
+ If you want to go more into the post-processing effects, the file will be in my
+
+426
+00:27:03,190 --> 00:27:04,240
+ Patreon, which
+
+427
+00:27:04,240 --> 00:27:09,900
+ is in the bio, but yeah, so a couple of nodes, and a little bit of chopped magic,
+
+428
+00:27:09,900 --> 00:27:10,520
+ we have
+
+429
+00:27:10,520 --> 00:27:13,280
+ created this really cool effect.
+
+430
+00:27:13,280 --> 00:27:16,860
+ So you can do a lot of things too, so for example, if you want these particles to
+
+431
+00:27:16,860 --> 00:27:17,160
+ move,
+
+432
+00:27:17,160 --> 00:27:24,040
+ you can go to noise, trans, noise to 40, and then transform, like translate, 40,
+
+433
+00:27:24,040 --> 00:27:24,720
+ abs time
+
+434
+00:27:24,720 --> 00:27:33,690
+ dot second, so you can really exaggerate a number, but now it will move while that
+
+435
+00:27:33,690 --> 00:27:35,080
+ happens.
+
+436
+00:27:35,080 --> 00:27:44,240
+ Make it a bit more chill, nice, now it's moving really subtly, but yeah, so I hope
+
+437
+00:27:44,240 --> 00:27:44,520
+ you enjoy
+
+438
+00:27:44,520 --> 00:27:51,280
+ this tutorial, I hope it's the first of many, and please enjoy, thank you so much.
+
